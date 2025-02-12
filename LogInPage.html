@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Link to external stylesheet -->
+    <style>
+        body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+}
+
+.login-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Adds space between elements */
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.forgot-password {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 10px; /* Space before the button */
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.signup-link {
+    display: block;
+    margin-top: 10px; /* Space after the button */
+    text-decoration: none;
+    color: #007bff;
+    font-size: 14px;
+    text-align: center;
+}
+
+.signup-link:hover {
+    text-decoration: underline;
+}
+
+    </style>
+</head>
+<body>
+
+<div class="login-container">
+    <h2>Login</h2>
+    <form id="loginForm">
+        <input type="email" id="email" placeholder="Email" required>
+        <input type="password" id="password" placeholder="Password" required>
+        <a href="ForgotPasswordPage.html" class="forgot-password">Forgot password?</a> <!-- Positioned between password and button -->
+        <button type="submit">Login</button>
+        <a href="SignUpPage.html" class="signup-link">Don't have an account? Sign Up</a> <!-- Positioned below login button -->
+    </form>
+</div>
+
+<script src="script.js"></script> <!-- Link to external JavaScript file -->
+</body>
+</html>
