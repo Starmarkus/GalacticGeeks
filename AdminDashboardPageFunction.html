@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Data Table</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+        }
+
+        .resource-details, .request-details {
+            /*  Styling for details if you want to highlight */
+            font-style: italic;
+            color: #666;
+        }
+    </style>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</head>
+<body>
+    <h1>Resource and Request Data</h1>
+    <table>
+        <thead>
+            <tr>
+                <th>Resource Name</th>
+                <th>Resource Details</th>
+                <th>Additional Resource Details</th>
+                <th>Request ID</th>
+                <th>Request Details</th>
+                <th>Additional Request Details</th>
+            </tr>
+        </thead>
+        <tbody id="data-table-body">
+            <!-- Data will be inserted here -->
+        </tbody>
+    </table>
+
+    <script>
+        // Firebase configuration - REPLACE WITH YOUR VALUES!
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
+  authDomain: "system-galacticgeeks.firebaseapp.com",
+  databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "system-galacticgeeks",
+  storageBucket: "system-galacticgeeks.firebasestorage.app",
+  messagingSenderId: "835850762785",
+  appId: "1:835850762785:web:d2e42efe2422dac089c160",
+  measurementId: "G-5S4L5M5GG5"
+        };
+
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        // Database references - ADJUST THESE TO MATCH YOUR DATA STRUCTURE
+        const resourcesRef = db.ref('resources'); // Example: resources/{resourceId}/{resourceData}
+        const requestsRef = db.ref('requests');  // Example: requests/{requestId}/{requestData}
+
+        // Function to populate the table
+        function populateTable(resources, requests) {
+            const tbody = document.getElementById('data-table-body');
+            tbody.innerHTML = ''; // Clear existing data
+
+            // Iterate through resources (assuming resources and requests are independent for this example)
+            for (const resourceId in resources) {
+                if (resources.hasOwnProperty(resourceId)) {
+                    const resource = resources[resourceId];
+                    const resourceName = resource.name || 'Unknown'; // Adjust property names
+                    const resourceDetails = resource.details || '';
+                    const additionalResourceDetails = resource.additional || ''; // Adjust property names
+
+                    // Find associated request (if any) - using a simple matching (You might need a more sophisticated join).  This example assumes resourceId might match the request key.
+                    let requestId = null;
+                    let requestDetails = '';
+                    let additionalRequestDetails = '';
+
+                    for (const reqId in requests) {
+                        if (requests.hasOwnProperty(reqId) && reqId === resourceId) { // Simple match
+                            requestId = reqId;
+                            requestDetails = requests[reqId].details || ''; // Adjust property names
+                            additionalRequestDetails = requests[reqId].additional || ''; // Adjust property names
+                            break; // Found a match, stop searching.
+                        }
+                    }
+
+                    // Create the table row
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${resourceName}</td>
+                        <td class="resource-details">${resourceDetails}</td>
+                        <td class="resource-details">${additionalResourceDetails}</td>
+                        <td>${requestId || 'N/A'}</td>
+                        <td class="request-details">${requestDetails}</td>
+                        <td class="request-details">${additionalRequestDetails}</td>
+                    `;
+                    tbody.appendChild(row);
+                }
+            }
+        }
+
+        // Fetch resources and requests data and populate the table
+        Promise.all([
+            resourcesRef.once('value'),
+            requestsRef.once('value')
+        ])
+        .then(([resourcesSnapshot, requestsSnapshot]) => {
+            const resources = resourcesSnapshot.val() || {}; // Handle null data
+            const requests = requestsSnapshot.val() || {};   // Handle null data
+            populateTable(resources, requests);
+        })
+        .catch(error => {
+            console.error("Error fetching data:", error);
+            document.getElementById('data-table-body').innerHTML = `<tr><td colspan="6">Error loading data. Check the console.</td></tr>`;
+        });
+    </script>
+</body>
+</html>
