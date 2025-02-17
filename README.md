@@ -3,7 +3,7 @@ Captain's log 000
 
 
 
-**** Firebase API key *****
+**** Firebase Database API key *****
 -------------------------------------------------------------------------------------------------------------------
 // Import the functions you need from the SDKs you need
 
