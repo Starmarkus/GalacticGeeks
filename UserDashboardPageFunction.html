@@ -105,28 +105,28 @@
             return section;
         }
 
-        function article(desc) {
+        function article(desc) { // rename the function occurring to the node within the database
             const article = document.createElement('article');
             article.textContent = desc; // Set the text content
             article.classList.add('article');
             return article;
         }
 
-        function img(imgSrc) {
+        function img(imgSrc) { // rename the function occurring to the node within the database
             const img = document.createElement('img');
             img.setAttribute('src', imgSrc);
             img.classList.add('img');
             return img;
         }
 
-        function h1(name) {
+        function h1(name) { // rename the function occurring to the node within the database
             const h1 = document.createElement('h1');
             h1.textContent = `Name: ${name}`;
             h1.classList.add('h1');
             return h1;
         }
 
-        function userDesc(desc) { // Renamed for clarity
+        function userDesc(desc) { // Renamed for clarity , rename the function occurring to the node within the database
             const p = document.createElement('p');
             p.textContent = `Description: ${desc}`;
             p.classList.add('p');
