@@ -3,77 +3,147 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Link to external stylesheet -->
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="style.css">  <!-- Link to your CSS -->
     <style>
-        body {
-    font-family: Arial, sans-serif;
-    background-color: #0C0910;
+        /* Inline CSS - you can move this to a separate style.css file */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
-        
-    
-    .container{
-        display: flex;
-        width: 100%;
-        height: 700px;
-    }
 
-    .TempNav {
-        outline: white;
-        width: 100%;
-        height: 100px;
-        background-color: lightblue;
-    }
+        html {
+            font-size: 62.5%;
+        }
 
-    .menuContainer {
-        width: 20%;
-        padding-right: 5%;
-        margin-right: 1%;
-        margin-top: 5px;
-        margin-bottom: 5px;
-        background-color: lightblue;
-    }
-    .userResourceContainer {
-margin-top: 5px;
-margin-left: 1%;
-margin-bottom: 5px;
-width: 75%;
-border: 2px solid white;
-}
+        body {
+            font-family: sans-serif; /* Or your preferred font */
+            background-color: #f4f4f4;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
 
+        #root {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            max-width: 1200px; /* Optional: to prevent the cards from spreading too wide */
+        }
 
-.userFooter {
-        outline: white;
-        width: 100%;
-        height: 100px;
-        margin-bottom: 5px;
-        background-color: lightblue;
-    }
+        section {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            text-align: center;
+        }
 
+        .img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin-bottom: 15px;
+        }
 
+        .h1 {
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+        }
+
+        .p {
+            font-size: 1.4rem;
+            color: #555;
+        }
+
+        /* Optional: Add hover effects */
+        section:hover {
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            transform: translateY(-3px);
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
     </style>
 </head>
 <body>
-    
-    <div class ="TempNav">
-        Temporary Navbar location
-    </div>
+    <div id="root"></div>
+    <script type="module">
+        import { initializeApp } from "firebase/app";
+        import { getAnalytics } from "firebase/analytics";
+        import { getDatabase, ref, get } from "firebase/database";
 
-<div class ="container">
-    <div class ="menuContainer">
-        Temporary menu location
-    </div>
-    <div class ="userResourceContainer">
-        <p style = "color: white;">resource location </p>
+        // Firebase configuration (replace with your actual config)
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
+            authDomain: "system-galacticgeeks.firebaseapp.com",
+            databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "system-galacticgeeks",
+            storageBucket: "system-galacticgeeks.appspot.com",
+            messagingSenderId: "835850762785",
+            appId: "1:835850762785:web:d2e42efe2422dac089c160",
+            measurementId: "G-5S4L5M5GG5"
+        };
 
-        <!---   Resources need to show up as cards
-        over here -->
-    </div>
-</div>
-<div class = "userFooter">
-    Footer Location
-</div>
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
 
+        // Reference to the database
+        const db = getDatabase();
+        const dbRef = ref(db, 'users'); // Assuming you have a 'users' node in your database
 
+        function createSection(user) {
+            const section = document.createElement('section');
+            section.classList.add('section');
+            const imgElement = createImg(user.profilePicture);
+            const h1Element = createH1(user.name);
+            const pElement = createUserDesc(user.description); // Corrected function call
+            section.appendChild(imgElement);
+            section.appendChild(h1Element);
+            section.appendChild(pElement);
+            return section;
+        }
+
+        function createImg(imgSrc) { // rename the function occurring to the node within the database
+            const img = document.createElement('img');
+            img.setAttribute('src', imgSrc);
+            img.classList.add('img');
+            return img;
+        }
+
+        function createH1(name) { // rename the function occurring to the node within the database
+            const h1 = document.createElement('h1');
+            h1.textContent = `Name: ${name}`;
+            h1.classList.add('h1');
+            return h1;
+        }
+
+        function createUserDesc(desc) { // Renamed for clarity , rename the function occurring to the node within the database
+            const p = document.createElement('p');
+            p.textContent = `Description: ${desc}`;
+            p.classList.add('p');
+            return p;
+        }
+
+        // Fetch data from Firebase
+        get(dbRef)
+            .then((snapshot) => {
+                if (snapshot.exists()) {
+                    const data = snapshot.val();
+                    const userData = Object.values(data); // Convert object to array
+                    const userCards = userData.map(createSection); // Changed section to createSection
+                    const root = document.querySelector('#root');
+                    root.append(...userCards);
+                } else {
+                    console.log("No data available");
+                }
+            })
+            .catch((error) => {
+                console.error("Error fetching data:", error);
+            });
+    </script>
 </body>
 </html>
