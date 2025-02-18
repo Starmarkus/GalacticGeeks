@@ -1,0 +1,104 @@
+body {
+    font-family: Arial, sans-serif;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    background-color: #f4f4f4;
+}
+
+.login-container {
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+    width: 300px;
+    text-align: center;
+}
+
+form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Adds space between elements */
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+}
+
+.forgot-password {
+    text-decoration: none;
+    color: #007bff;
+    font-size: 14px;
+    text-align: center;
+    margin-bottom: 10px; /* Space before the button */
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+button {
+    width: 100%;
+    padding: 10px;
+    background: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #0056b3;
+}
+
+.signup-link {
+    display: block;
+    margin-top: 10px; /* Space after the button */
+    text-decoration: none;
+    color: #007bff;
+    font-size: 14px;
+    text-align: center;
+}
+
+.signup-link:hover {
+    text-decoration: underline;
+}
+
+.signup-container {
+    width: 300px;
+    margin: auto;
+    text-align: center;
+}
+/* This is a comment */
+
+.login-link {
+    display: block;
+    margin-top: 10px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.login-link:hover {
+    text-decoration: underline;
+}
+
+.reset-container {
+    width: 300px;
+    margin: auto;
+    text-align: center;
+}
+
+.login-link {
+    display: block;
+    margin-top: 10px;
+    text-decoration: none;
+    color: #007bff;
+}
+
+.login-link:hover {
+    text-decoration: underline;
+}
