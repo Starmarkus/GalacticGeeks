@@ -4,8 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
-    <link rel="stylesheet" href="style.css">  <!-- Link to your CSS -->
+    <link rel="stylesheet" href="styles.css">  <!-- Link to your CSS -->
     <style>
+        /* Inline CSS - you can move this to a separate style.css file */
         * {
             margin: 0;
             padding: 0;
@@ -17,10 +18,10 @@
         }
 
         body {
-            font-family: sans-serif;
+            font-family: sans-serif; /* Or your preferred font */
             background-color: #f4f4f4;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
@@ -30,7 +31,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
-            max-width: 1200px;
+            max-width: 1200px; /* Optional: to prevent the cards from spreading too wide */
         }
 
         section {
@@ -59,24 +60,15 @@
             color: #555;
         }
 
+        /* Optional: Add hover effects */
         section:hover {
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
             transform: translateY(-3px);
             transition: box-shadow 0.3s ease, transform 0.3s ease;
         }
-
-        #notification {
-            background: #dff0d8;
-            color: #3c763d;
-            padding: 10px;
-            margin-top: 20px;
-            display: none;
-            border-radius: 5px;
-        }
     </style>
 </head>
 <body>
-    <h1>Available Resources</h1>
     <div id="root"></div>
     <h2>Request a Resource</h2>
     <form id="request-form">
