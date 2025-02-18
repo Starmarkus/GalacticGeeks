@@ -56,8 +56,11 @@
             <!-- Data will be inserted here -->
         </tbody>
     </table>
+  <div id="root"></div>
+    <script type="module">
+        import { initializeApp } from "firebase/app";
+        import { getDatabase, ref, get } from "firebase/database";
 
-    <script>
         // Firebase configuration - REPLACE WITH YOUR VALUES!
         const firebaseConfig = {
             apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
