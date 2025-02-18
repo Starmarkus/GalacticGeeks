@@ -3,66 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Data Table</title>
+    <title>Admin Resource Management</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-        }
-
-        h1 {
-            margin-bottom: 20px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 20px;
-        }
-
-        th, td {
-            border: 1px solid #ddd;
-            padding: 8px;
-            text-align: left;
-        }
-
-        th {
-            background-color: #f2f2f2;
-        }
-
-        .resource-details, .request-details {
-            /*  Styling for details if you want to highlight */
-            font-style: italic;
-            color: #666;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .resource-details, .request-details { font-style: italic; color: #666; }
+        .admin-controls { margin-bottom: 20px; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>Resource and Request Data</h1>
+    <h1>Admin Resource Management</h1>
+    <div class="admin-controls">
+        <h2>Manage Resources</h2>
+        <input type="text" id="resourceName" placeholder="Resource Name">
+        <input type="text" id="resourceDetails" placeholder="Resource Details">
+        <button onclick="addResource()">Add Resource</button>
+    </div>
+    <h2>Resource and Request Data</h2>
     <table>
         <thead>
             <tr>
                 <th>Resource Name</th>
                 <th>Resource Details</th>
-                <th>Additional Resource Details</th>
                 <th>Request ID</th>
                 <th>Request Details</th>
-                <th>Additional Request Details</th>
+                <th>Status</th>
+                <th>Actions</th>
             </tr>
         </thead>
-        <body id="data-table-body">
-            <!-- Data will be inserted here -->
-        <body>
+        <tbody id="data-table-body"></tbody>
     </table>
-  <div id="root"></div>
+    <h2>Most Requested Resources</h2>
+    <canvas id="requestChart"></canvas>
     <script type="module">
         import { initializeApp } from "firebase/app";
-        import { getAnalytics } from "firebase/analytics";
-        import { getDatabase, ref, get } from "firebase/database";
+        import { getDatabase, ref, get, set, remove } from "firebase/database";
 
-        // Firebase configuration - REPLACE WITH YOUR VALUES!
         const firebaseConfig = {
             apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
   authDomain: "system-galacticgeeks.firebaseapp.com",
@@ -74,70 +56,66 @@
   measurementId: "G-5S4L5M5GG5"
         };
 
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-        const db = firebase.database();
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+        const resourcesRef = ref(db, 'resources');
+        const requestsRef = ref(db, 'requests');
 
-        // Database references - ADJUST THESE TO MATCH YOUR DATA STRUCTURE
-        const resourcesRef = db.ref('resources'); // Example: resources/{resourceId}/{resourceData}
-        const requestsRef = db.ref('requests');  // Example: requests/{requestId}/{requestData}
+        function addResource() {
+            const name = document.getElementById('resourceName').value;
+            const details = document.getElementById('resourceDetails').value;
+            const newResourceRef = ref(db, 'resources/' + Date.now());
+            set(newResourceRef, { name, details });
+        }
 
-        // Function to populate the table
+        function updateStatus(requestId, status, comment) {
+            set(ref(db, `requests/${requestId}/status`), { status, comment });
+        }
+
+        function deleteResource(resourceId) {
+            remove(ref(db, `resources/${resourceId}`));
+        }
+
         function populateTable(resources, requests) {
             const tbody = document.getElementById('data-table-body');
-            tbody.innerHTML = ''; // Clear existing data
-
-            // Iterate through resources (assuming resources and requests are independent for this example)
+            tbody.innerHTML = '';
             for (const resourceId in resources) {
-                if (resources.hasOwnProperty(resourceId)) {
-                    const resource = resources[resourceId];
-                    const resourceName = resource.name || 'Unknown'; // Adjust property names
-                    const resourceDetails = resource.details || '';
-                    const additionalResourceDetails = resource.additional || ''; // Adjust property names
-
-                    // Find associated request (if any) - using a simple matching (You might need a more sophisticated join).  This example assumes resourceId might match the request key.
-                    let requestId = null;
-                    let requestDetails = '';
-                    let additionalRequestDetails = '';
-
-                    for (const reqId in requests) {
-                        if (requests.hasOwnProperty(reqId) && reqId === resourceId) { // Simple match
-                            requestId = reqId;
-                            requestDetails = requests[reqId].details || ''; // Adjust property names
-                            additionalRequestDetails = requests[reqId].additional || ''; // Adjust property names
-                            break; // Found a match, stop searching.
-                        }
-                    }
-
-                    // Create the table row
-                    const row = document.createElement('tr');
-                    row.innerHTML = `
-                        <td>${resourceName}</td>
-                        <td class="resource-details">${resourceDetails}</td>
-                        <td class="resource-details">${additionalResourceDetails}</td>
-                        <td>${requestId || 'N/A'}</td>
-                        <td class="request-details">${requestDetails}</td>
-                        <td class="request-details">${additionalRequestDetails}</td>
-                    `;
-                    tbody.appendChild(row);
-                }
+                const resource = resources[resourceId];
+                const request = requests[resourceId] || {};
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${resource.name}</td>
+                    <td class="resource-details">${resource.details}</td>
+                    <td>${requestId || 'N/A'}</td>
+                    <td class="request-details">${request.details || ''}</td>
+                    <td>${request.status ? request.status.status : 'Pending'}</td>
+                    <td>
+                        <button onclick="updateStatus('${resourceId}', 'Approved', 'Approved by Admin')">Approve</button>
+                        <button onclick="updateStatus('${resourceId}', 'Rejected', 'Rejected by Admin')">Reject</button>
+                        <button onclick="deleteResource('${resourceId}')">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
             }
         }
 
-        // Fetch resources and requests data and populate the table
-        Promise.all([
-            resourcesRef.once('value'),
-            requestsRef.once('value')
-        ])
-        .then(([resourcesSnapshot, requestsSnapshot]) => {
-            const resources = resourcesSnapshot.val() || {}; // Handle null data
-            const requests = requestsSnapshot.val() || {};   // Handle null data
+        function loadChart(requests) {
+            const labels = Object.keys(requests);
+            const data = labels.map(id => requests[id].count || 1);
+            new Chart(document.getElementById('requestChart'), {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{ label: 'Requests', data, backgroundColor: 'blue' }]
+                }
+            });
+        }
+
+        Promise.all([get(resourcesRef), get(requestsRef)]).then(([resourcesSnap, requestsSnap]) => {
+            const resources = resourcesSnap.val() || {};
+            const requests = requestsSnap.val() || {};
             populateTable(resources, requests);
-        })
-        .catch(error => {
-            console.error("Error fetching data:", error);
-            document.getElementById('data-table-body').innerHTML = `<tr><td colspan="6">Error loading data. Check the console.</td></tr>`;
+            loadChart(requests);
         });
     </script>
 </body>

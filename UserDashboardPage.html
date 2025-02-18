@@ -6,7 +6,6 @@
     <title>User Dashboard</title>
     <link rel="stylesheet" href="style.css">  <!-- Link to your CSS -->
     <style>
-        /* Inline CSS - you can move this to a separate style.css file */
         * {
             margin: 0;
             padding: 0;
@@ -18,10 +17,10 @@
         }
 
         body {
-            font-family: sans-serif; /* Or your preferred font */
+            font-family: sans-serif;
             background-color: #f4f4f4;
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
@@ -31,7 +30,7 @@
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
-            max-width: 1200px; /* Optional: to prevent the cards from spreading too wide */
+            max-width: 1200px;
         }
 
         section {
@@ -60,22 +59,35 @@
             color: #555;
         }
 
-        /* Optional: Add hover effects */
         section:hover {
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
             transform: translateY(-3px);
             transition: box-shadow 0.3s ease, transform 0.3s ease;
         }
+
+        #notification {
+            background: #dff0d8;
+            color: #3c763d;
+            padding: 10px;
+            margin-top: 20px;
+            display: none;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
+    <h1>Available Resources</h1>
     <div id="root"></div>
+    <h2>Request a Resource</h2>
+    <form id="request-form">
+        <input type="text" id="resource-name" placeholder="Enter resource name" required>
+        <button type="submit">Request</button>
+    </form>
+    <div id="notification"></div>
     <script type="module">
         import { initializeApp } from "firebase/app";
-        import { getAnalytics } from "firebase/analytics";
-        import { getDatabase, ref, get } from "firebase/database";
+        import { getDatabase, ref, get, push, onValue } from "firebase/database";
 
-        // Firebase configuration (replace with your actual config)
         const firebaseConfig = {
             apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
             authDomain: "system-galacticgeeks.firebaseapp.com",
@@ -87,63 +99,48 @@
             measurementId: "G-5S4L5M5GG5"
         };
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-        const analytics = getAnalytics(app);
-
-        // Reference to the database
         const db = getDatabase();
-        const dbRef = ref(db, 'users'); // Assuming you have a 'users' node in your database
 
-        function createSection(user) {
+        function createResourceCard(resource) {
             const section = document.createElement('section');
-            section.classList.add('section');
-            const imgElement = createImg(user.profilePicture);
-            const h1Element = createH1(user.name);
-            const pElement = createUserDesc(user.description); // Corrected function call
-            section.appendChild(imgElement);
-            section.appendChild(h1Element);
-            section.appendChild(pElement);
+            section.innerHTML = `
+                <h2>${resource.name}</h2>
+                <p>${resource.description}</p>
+                <button onclick="requestResource('${resource.name}')">Request</button>
+            `;
             return section;
         }
 
-        function createImg(imgSrc) { // rename the function occurring to the node within the database
-            const img = document.createElement('img');
-            img.setAttribute('src', imgSrc);
-            img.classList.add('img');
-            return img;
-        }
+        get(ref(db, 'resources')).then((snapshot) => {
+            if (snapshot.exists()) {
+                const resources = snapshot.val();
+                const root = document.getElementById('root');
+                Object.values(resources).forEach(resource => {
+                    root.appendChild(createResourceCard(resource));
+                });
+            }
+        });
 
-        function createH1(name) { // rename the function occurring to the node within the database
-            const h1 = document.createElement('h1');
-            h1.textContent = `Name: ${name}`;
-            h1.classList.add('h1');
-            return h1;
-        }
+        document.getElementById('request-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const resourceName = document.getElementById('resource-name').value;
+            push(ref(db, 'requests'), { name: resourceName, status: 'pending' });
+            document.getElementById('notification').textContent = 'Request submitted!';
+            document.getElementById('notification').style.display = 'block';
+        });
 
-        function createUserDesc(desc) { // Renamed for clarity , rename the function occurring to the node within the database
-            const p = document.createElement('p');
-            p.textContent = `Description: ${desc}`;
-            p.classList.add('p');
-            return p;
-        }
-
-        // Fetch data from Firebase
-        get(dbRef)
-            .then((snapshot) => {
-                if (snapshot.exists()) {
-                    const data = snapshot.val();
-                    const userData = Object.values(data); // Convert object to array
-                    const userCards = userData.map(createSection); // Changed section to createSection
-                    const root = document.querySelector('#root');
-                    root.append(...userCards);
-                } else {
-                    console.log("No data available");
-                }
-            })
-            .catch((error) => {
-                console.error("Error fetching data:", error);
-            });
+        onValue(ref(db, 'requests'), (snapshot) => {
+            if (snapshot.exists()) {
+                const requests = snapshot.val();
+                Object.values(requests).forEach(request => {
+                    if (request.status !== 'pending') {
+                        document.getElementById('notification').textContent = `Your request for ${request.name} has been ${request.status}`;
+                        document.getElementById('notification').style.display = 'block';
+                    }
+                });
+            }
+        });
     </script>
 </body>
 </html>
