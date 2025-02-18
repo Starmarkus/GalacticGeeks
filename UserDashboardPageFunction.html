@@ -88,7 +88,8 @@
 
         // Initialize Firebase
         const app = initializeApp(firebaseConfig);
-
+        const analytics = getAnalytics(app);
+        
         // Reference to the database
         const db = getDatabase();
         const dbRef = ref(db, 'users'); // Assuming you have a 'users' node in your database
