@@ -1,12 +1,70 @@
+
 body {
     font-family: Arial, sans-serif;
+    background-color: #0C0910;
+        }
+        
+/* Inline CSS - you can move this to a separate style.css file */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html {
+    font-size: 62.5%;
+}
+
+.rootbody {
+    font-family: sans-serif; /* Or your preferred font */
+    background-color: #f4f4f4;
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    background-color: #f4f4f4;
+    min-height: 100vh;
+    padding: 20px;
 }
 
+#root {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    max-width: 1200px; /* Optional: to prevent the cards from spreading too wide */
+}
+
+section {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    text-align: center;
+}
+
+.img {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin-bottom: 15px;
+}
+
+.h1 {
+    font-size: 1.8rem;
+    margin-bottom: 10px;
+}
+
+.p {
+    font-size: 1.4rem;
+    color: #555;
+}
+
+/* Optional: Add hover effects */
+section:hover {
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    transform: translateY(-3px);
+    transition: box-shadow 0.3s ease, transform 0.3s ease;
+} 
+        
 .login-container {
     background: white;
     padding: 20px;
@@ -102,3 +160,42 @@ button:hover {
 .login-link:hover {
     text-decoration: underline;
 }
+    
+    .container{
+        display: flex;
+        width: 100%;
+        height: 700px;
+    }
+
+    .TempNav {
+        outline: white;
+        width: 100%;
+        height: 100px;
+        background-color: lightblue;
+    }
+
+    .menuContainer {
+        width: 20%;
+        padding-right: 5%;
+        margin-right: 1%;
+        margin-top: 5px;
+        margin-bottom: 5px;
+        background-color: lightblue;
+    }
+    .adminResourceContainer {
+margin-top: 5px;
+margin-left: 1%;
+margin-bottom: 5px;
+width: 75%;
+border: 2px solid white;
+}
+
+
+.userFooter {
+        outline: white;
+        width: 100%;
+        height: 100px;
+        margin-bottom: 5px;
+        background-color: lightblue;
+    }
+
