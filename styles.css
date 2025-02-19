@@ -202,11 +202,11 @@ height: 50%;
         background-color: lightblue;
     }
     .adminResourceContainer {
+        float: right;
 margin-top: 5px;
 margin-left: 1%;
 margin-bottom: 5px;
 width: 75%;
-border: 2px solid white;
 }
 .userFooter {
         outline: white;
