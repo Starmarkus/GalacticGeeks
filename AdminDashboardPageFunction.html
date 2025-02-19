@@ -26,8 +26,9 @@
         <h2>Manage Resources</h2>
         <input type="text" id="resourceName" placeholder="Resource Name">
         <input type="text" id="resourceDetails" placeholder="Resource Details">
+        <input type="text" id="resourceId" placeholder="Enter Resource ID">
+        <input type="text" id="resourceDetails" placeholder="Enter Resource Details">
         <button id="addResourceBtn" onclick="addResource()">Add Resource</button>
-        <input type="hidden" id="resourceId">
         <button id="updateResourceBtn" onclick="updateResource()" style="display: none;">Update Resource</button>
     </div>
 
@@ -75,36 +76,84 @@
         function addResource() {
             const name = document.getElementById('resourceName').value;
             const details = document.getElementById('resourceDetails').value;
-            if (name.trim() === "" || details.trim() === "") {
-                alert("Please enter valid resource details.");
+            const resourceId = document.getElementById('resourceId').value;  // Get the Resource ID input
+         if (name.trim() === "" || details.trim() === "" || resourceId.trim() === "") {
+                alert("Please enter valid resource details and a Resource ID.");
                 return;
             }
-            const newResourceRef = db.ref('resources').push();
+
+            // Add resource to Firebase database
+            const newResourceRef = db.ref('resources/' + resourceId);  // Use the entered resourceId
             newResourceRef.set({ name, details })
-                .then(() => alert("Resource added successfully"))
+                .then(() => {
+                    alert("Resource added successfully");
+                    resetForm();
+                    updateTable();  // Update the table to show new data
+                })
                 .catch(error => console.error("Error adding resource:", error));
         }
 
-        // Update Resource Function
-        function updateResource() {
-            const resourceId = document.getElementById('resourceId').value;
-            const name = document.getElementById('resourceName').value;
-            const details = document.getElementById('resourceDetails').value;
-            if (resourceId) {
-                db.ref(`resources/${resourceId}`).update({ name, details })
-                    .then(() => {
-                        alert("Resource updated successfully");
-                        resetForm();
+        // Update Table Function
+        function updateTable() {
+            db.ref('resources').on('value', (resourcesSnap) => {
+                const resources = resourcesSnap.val() || {};
+                db.ref('requests').once('value')
+                    .then((requestsSnap) => {
+                        const requests = requestsSnap.val() || {};
+                        populateTable(resources, requests);
                     })
-                    .catch(error => console.error("Error updating resource:", error));
-            } else {
-                alert("No resource selected for update.");
+                    .catch(error => console.error("Error fetching requests:", error));
+            });
+        }
+
+        // Populate Table Function
+        function populateTable(resources, requests) {
+            const tbody = document.getElementById('data-table-body');
+            tbody.innerHTML = '';
+            let totalRequests = 0;
+            let totalApprovals = 0;
+            let resourceCounts = {};
+
+            // Loop through resources and check the corresponding request
+            for (const resourceId in resources) {
+                const resource = resources[resourceId];
+                const request = requests[resourceId] || {};  // Default empty request if none exists
+
+                totalRequests++;
+
+                if (request.status === 'Approved') {
+                    totalApprovals++;
+                }
+
+                resourceCounts[resourceId] = (resourceCounts[resourceId] || 0) + 1;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${resource.name}</td>
+                    <td class="resource-details">${resource.details}</td>
+                    <td>${resourceId}</td>  <!-- Display Resource ID -->
+                    <td class="request-details">${request.details || ''}</td>
+                    <td>${request.status || 'Pending'}</td>
+                    <td>
+                        <button onclick="editResource('${resourceId}', '${resource.name}', '${resource.details}')">Edit</button>
+                        <button onclick="deleteResource('${resourceId}')">Delete</button>
+                        <button onclick="approveRequest('${resourceId}')">Approve</button>
+                            <button onclick="rejectRequest('${resourceId}')">Reject</button>
+                            <input type="text" id="comment-${resourceId}" placeholder="Add comment">
+                            <button onclick="addComment('${resourceId}')">Add Comment</button>
+                        </td>
+                `;
+                tbody.appendChild(row);
             }
+
+            document.getElementById('totalRequests').textContent = totalRequests;
+            document.getElementById('totalApprovals').textContent = totalApprovals;
+            generateChart(resourceCounts);
         }
 
         // Reset Form
         function resetForm() {
-            document.getElementById('resourceId').value = '';
+            document.getElementById('resourceId').value = '';  // Clear Resource ID input
             document.getElementById('resourceName').value = '';
             document.getElementById('resourceDetails').value = '';
             document.getElementById('addResourceBtn').style.display = 'inline-block';
@@ -156,60 +205,6 @@
                 .catch(error => console.error("Error adding comment:", error));
         }
 
-        // Update Table Function
-        function updateTable() {
-            db.ref('resources').on('value', (resourcesSnap) => {
-                const resources = resourcesSnap.val() || {};
-                db.ref('requests').once('value')
-                    .then((requestsSnap) => {
-                        const requests = requestsSnap.val() || {};
-                        populateTable(resources, requests);
-                    })
-                    .catch(error => console.error("Error fetching requests:", error));
-            });
-        }
-
-        // Populate Table Function
-        function populateTable(resources, requests) {
-            const tbody = document.getElementById('data-table-body');
-            tbody.innerHTML = '';
-            let totalRequests = 0;
-            let totalApprovals = 0;
-            let resourceCounts = {};
-            for (const resourceId in resources) {
-                const resource = resources[resourceId];
-                const request = requests[resourceId] || {};
-                totalRequests++;
-                if (request.status === 'Approved') {
-                    totalApprovals++;
-                }
-                resourceCounts[resourceId] = (resourceCounts[resourceId] || 0) + 1;
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${resource.name}</td>
-                    <td class="resource-details">${resource.details}</td>
-                    <td>${request.id || 'N/A'}</td>
-                    <td class="request-details">${request.details || ''}</td>
-                    <td>${request.status || 'Pending'}</td>
-                    <td>
-                        <button onclick="editResource('${resourceId}', '${resource.name}', '${resource.details}')">Edit</button>
-                        <button onclick="deleteResource('${resourceId}')">Delete</button>
-                        <!-- Approve/Reject buttons -->
-                        ${request.id ? `
-                            <button onclick="approveRequest('${request.id}')">Approve</button>
-                            <button onclick="rejectRequest('${request.id}')">Reject</button>
-                            <input type="text" id="comment-${request.id}" placeholder="Add comment">
-                            <button onclick="addComment('${request.id}')">Add Comment</button>
-                        ` : ''}
-                    </td>
-                `;
-                tbody.appendChild(row);
-            }
-            document.getElementById('totalRequests').textContent = totalRequests;
-            document.getElementById('totalApprovals').textContent = totalApprovals;
-            generateChart(resourceCounts);
-        }
-
         // Generate Chart Function
         function generateChart(resourceCounts) {
             const ctx = document.getElementById('requestChart').getContext('2d');
@@ -237,16 +232,8 @@
             });
         }
 
-        // Initial Data Fetch and Table Population
-        db.ref('resources').on('value', (resourcesSnap) => {
-            const resources = resourcesSnap.val() || {};
-            db.ref('requests').once('value')
-                .then((requestsSnap) => {
-                    const requests = requestsSnap.val() || {};
-                    populateTable(resources, requests);
-                })
-                .catch(error => console.error("Error fetching requests:", error));
-        });
+        // Initialize Table on Page Load
+        window.onload = updateTable;
     </script>
 </body>
 </html>
