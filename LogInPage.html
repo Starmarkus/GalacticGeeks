@@ -67,7 +67,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Show notification
-function showNotification(message, isError = false) {
+function showNotification(message, isError = true) {
     const notification = document.getElementById('notification');
     notification.textContent = message;
     notification.classList.remove('error');
@@ -93,11 +93,11 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
     try {
         await signInWithEmailAndPassword(auth, email, password);
         // Show success notification
-        showNotification('Login Successful!', false);
+        showNotification('Login Successful!', true);
 
         // Redirect to another page after login
         setTimeout(() => {
-            window.location.href = 'DashboardPage.html';  // Change to your desired page
+            window.location.href = 'UserDashboardPage.html';  // Change to your desired page
         }, 2000);  // Delay to show notification
 
     } catch (error) {

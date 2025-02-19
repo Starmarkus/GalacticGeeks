@@ -72,7 +72,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 // Show notification
-function showNotification(message, isError = false) {
+function showNotification(message, isError = true) {
     const notification = document.getElementById('notification');
     notification.textContent = message;
     notification.classList.remove('error');
@@ -104,7 +104,7 @@ async function signUpUser(firstName, lastName, email, password) {
         console.log("User registered successfully:", user);
 
         // Show success notification
-        showNotification("Sign-up successful! Redirecting...", false);
+        showNotification("Sign-up successful! Redirecting...", true);
 
         // Redirect to login page or dashboard after successful sign-up
         setTimeout(() => {
