@@ -61,39 +61,16 @@
         function addResource() {
             const name = document.getElementById('resourceName').value;
             const details = document.getElementById('resourceDetails').value;
-            if (name.trim() === "" || details.trim() === "") {
-                alert("Please enter valid resource details.");
-                return;
-            }
-            const newResourceRef = db.ref('resources').push();
-            newResourceRef.set({ name, details })
-                .then(() => alert("Resource added successfully"))
-                .catch(error => console.error("Error adding resource:", error));
-        }
-
-        function updateResource() {
-            const resourceId = document.getElementById('resourceId').value;
-            const name = document.getElementById('resourceName').value;
-            const details = document.getElementById('resourceDetails').value;
-            if (resourceId) {
-                db.ref(`resources/${resourceId}`).update({ name, details })
-                    .then(() => alert("Resource updated successfully"))
-                    .catch(error => console.error("Error updating resource:", error));
-            } else {
-                alert("No resource selected for update.");
-            }
+            const newResourceRef = ref(db, 'resources/' + Date.now());
+            set(newResourceRef, { name, details });
         }
 
         function updateStatus(requestId, status, comment) {
-            db.ref(`requests/${requestId}`).update({ status: { status, comment } })
-                .then(() => alert(`Request ${status.toLowerCase()}`))
-                .catch(error => console.error("Error updating status:", error));
+            set(ref(db, `requests/${requestId}/status`), { status, comment });
         }
 
         function deleteResource(resourceId) {
-            db.ref(`resources/${resourceId}`).remove()
-                .then(() => alert("Resource deleted successfully"))
-                .catch(error => console.error("Error deleting resource:", error));
+            remove(ref(db, `resources/${resourceId}`));
         }
 
         function populateTable(resources, requests) {
@@ -138,8 +115,7 @@
             });
         }
 
-        // Real-time data fetching with event listeners
-        db.ref('resources').on('value', (resourcesSnap) => {
+        Promise.all([get(resourcesRef), get(requestsRef)]).then(([resourcesSnap, requestsSnap]) => {
             const resources = resourcesSnap.val() || {};
             db.ref('requests').once('value')
                 .then((requestsSnap) => {
