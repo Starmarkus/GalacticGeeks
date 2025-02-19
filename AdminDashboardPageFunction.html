@@ -6,9 +6,11 @@
     <title>Admin Resource Management</title>
     <link rel="stylesheet" href="styles.css"> <!-- Link to external stylesheet -->
     <style>
+       
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script> <!-- TensorFlow.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -52,17 +54,40 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        function addResource() {
+        // Load TensorFlow.js model (Universal Sentence Encoder)
+        async function loadModel() {
+            const model = await tf.loadGraphModel('https://tfhub.dev/google/universal-sentence-encoder/4');
+            return model;
+        }
+
+        // Get embeddings for the resource name using TensorFlow.js model
+        async function getEmbeddings(text) {
+            const model = await loadModel();
+            const embeddings = await model.executeAsync({ 'input': text });
+            return embeddings.arraySync()[0]; // First embedding array
+        }
+
+        // Add Resource with embedding
+        async function addResource() {
             const name = document.getElementById('resourceName').value;
             const details = document.getElementById('resourceDetails').value;
             if (name.trim() === "" || details.trim() === "") {
                 alert("Please enter valid resource details.");
                 return;
             }
+
+            // Get the embedding for the resource name
+            const embedding = await getEmbeddings(name);
+
+            // Store the resource data and embedding to Firebase
             const newResourceRef = db.ref('resources').push();
-            newResourceRef.set({ name, details })
-                .then(() => alert("Resource added successfully"))
-                .catch(error => console.error("Error adding resource:", error));
+            newResourceRef.set({
+                name, 
+                details,
+                embedding // Store the embedding array
+            })
+            .then(() => alert("Resource added successfully"))
+            .catch(error => console.error("Error adding resource:", error));
         }
 
         function updateResource() {
