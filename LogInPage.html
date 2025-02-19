@@ -4,8 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login Page</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Link to external stylesheet -->
+    <link rel="stylesheet" href="styles.css">
     <style>
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            display: none; /* Hidden by default */
+            z-index: 1000;
+        }
+
+        .notification.error {
+            background-color: #f44336; /* Red for errors */
+        }
     </style>
 </head>
 <body>
@@ -17,14 +33,83 @@
     <form id="loginForm">
         <input type="email" id="email" placeholder="Email" required>
         <input type="password" id="password" placeholder="Password" required>
-        <a href="ForgotPasswordPage.html" class="forgot-password">Forgot password?</a> <!-- Positioned between password and button -->
+        <a href="ForgotPasswordPage.html" class="forgot-password">Forgot password?</a>
         <button type="submit">Login</button>
-        <a href="SignUpPage.html" class="signup-link">Don't have an account? Sign Up</a> <!-- Positioned below login button -->
+        <a href="SignUpPage.html" class="signup-link">Don't have an account? Sign Up</a>
     </form>
 </div>
 </div>
 </div>
 
-<script src="Login.js"></script> <!-- Link to external JavaScript file -->
+<div id="notification" class="notification"></div>
+
+<script src="https://www.gstatic.com/firebasejs/9.19.0/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.19.0/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.19.0/firebase-firestore.js"></script>
+
+<script>
+// Firebase Configuration
+const firebaseConfig = {
+    apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
+    authDomain: "system-galacticgeeks.firebaseapp.com",
+    databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "system-galacticgeeks",
+    storageBucket: "system-galacticgeeks.appspot.com",
+    messagingSenderId: "835850762785",
+    appId: "1:835850762785:web:d2e42efe2422dac089c160",
+    measurementId: "G-5S4L5M5GG5"
+};
+
+// Initialize Firebase using the correct modular approach
+import { initializeApp } from "firebase/app";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// Show notification
+function showNotification(message, isError = true) {
+    const notification = document.getElementById('notification');
+    notification.textContent = message;
+    notification.classList.remove('error');
+    if (isError) {
+        notification.classList.add('error');
+    }
+    notification.style.display = 'block';
+
+    // Hide after 5 seconds
+    setTimeout(() => {
+        notification.style.display = 'none';
+    }, 5000);
+}
+
+// Handle login form submission
+document.getElementById('loginForm').addEventListener('submit', async function(event) {
+    event.preventDefault();
+
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    // Call Firebase Authentication to log in
+    try {
+        await signInWithEmailAndPassword(auth, email, password);
+        // Show success notification
+        showNotification('Login Successful!', true);
+
+        // Redirect to another page after login
+        setTimeout(() => {
+            window.location.href = 'UserDashboardPage.html';  // Change to your desired page
+        }, 2000);  // Delay to show notification
+
+    } catch (error) {
+        // Show error notification
+        showNotification('Error: ' + error.message, true);
+    }
+});
+</script>
+
 </body>
 </html>
