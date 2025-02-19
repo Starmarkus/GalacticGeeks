@@ -6,7 +6,13 @@
     <title>Admin Resource Management</title>
     <link rel="stylesheet" href="styles.css"> <!-- Link to external stylesheet -->
     <style>
-       
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .resource-details, .request-details { font-style: italic; color: #666; }
+        .admin-controls { margin-bottom: 20px; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -15,14 +21,18 @@
 </head>
 <body>
     <h1>Admin Resource Management</h1>
+    <!-- Admin Controls for Adding/Editing Resources -->
     <div class="admin-controls">
         <h2>Manage Resources</h2>
         <input type="text" id="resourceName" placeholder="Resource Name">
         <input type="text" id="resourceDetails" placeholder="Resource Details">
-        <button onclick="addResource()">Add Resource</button>
-        <input type="hidden" id="resourceId">
-        <button onclick="updateResource()">Update Resource</button>
+        <input type="text" id="resourceId" placeholder="Enter Resource ID">
+        <input type="text" id="resourceDetails" placeholder="Enter Resource Details">
+        <button id="addResourceBtn" onclick="addResource()">Add Resource</button>
+        <button id="updateResourceBtn" onclick="updateResource()" style="display: none;">Update Resource</button>
     </div>
+
+    <!-- Resource and Request Data Table -->
     <h2>Resource and Request Data</h2>
     <table>
         <thead>
@@ -37,8 +47,16 @@
         </thead>
         <tbody id="data-table-body"></tbody>
     </table>
-    <h2>Most Requested Resources</h2>
-    <canvas id="requestChart"></canvas>
+
+    <!-- Statistics Section -->
+    <div class="stats">
+        <h2>Statistics</h2>
+        <div>Total Resource Requests: <span id="totalRequests">0</span></div>
+        <div>Total Approvals: <span id="totalApprovals">0</span></div>
+        <div>Most Requested Resources:</div>
+        <canvas id="requestChart"></canvas>
+    </div>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
@@ -54,121 +72,161 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
-        // Load TensorFlow.js model (Universal Sentence Encoder)
-        async function loadModel() {
-            const model = await tf.loadGraphModel('https://tfhub.dev/google/universal-sentence-encoder/4');
-            return model;
-        }
-
-        // Get embeddings for the resource name using TensorFlow.js model
-        async function getEmbeddings(text) {
-            const model = await loadModel();
-            const embeddings = await model.executeAsync({ 'input': text });
-            return embeddings.arraySync()[0]; // First embedding array
-        }
-
-        // Add Resource with embedding
-        async function addResource() {
+        function addResource() {
             const name = document.getElementById('resourceName').value;
             const details = document.getElementById('resourceDetails').value;
-            if (name.trim() === "" || details.trim() === "") {
-                alert("Please enter valid resource details.");
+            const resourceId = document.getElementById('resourceId').value;  // Get the Resource ID input
+         if (name.trim() === "" || details.trim() === "" || resourceId.trim() === "") {
+                alert("Please enter valid resource details and a Resource ID.");
                 return;
             }
-
-            // Get the embedding for the resource name
-            const embedding = await getEmbeddings(name);
-
-            // Store the resource data and embedding to Firebase
             const newResourceRef = db.ref('resources').push();
-            newResourceRef.set({
-                name, 
-                details,
-                embedding // Store the embedding array
-            })
-            .then(() => alert("Resource added successfully"))
-            .catch(error => console.error("Error adding resource:", error));
+            newResourceRef.set({ name, details })
+                .then(() => alert("Resource added successfully"))
+                .catch(error => console.error("Error adding resource:", error));
         }
 
-        function updateResource() {
-            const resourceId = document.getElementById('resourceId').value;
-            const name = document.getElementById('resourceName').value;
-            const details = document.getElementById('resourceDetails').value;
-            if (resourceId) {
-                db.ref(`resources/${resourceId}`).update({ name, details })
-                    .then(() => alert("Resource updated successfully"))
-                    .catch(error => console.error("Error updating resource:", error));
-            } else {
-                alert("No resource selected for update.");
+        // Update Table Function
+        function updateTable() {
+            db.ref('resources').on('value', (resourcesSnap) => {
+                const resources = resourcesSnap.val() || {};
+                db.ref('requests').once('value')
+                    .then((requestsSnap) => {
+                        const requests = requestsSnap.val() || {};
+                        populateTable(resources, requests);
+                    })
+                    .catch(error => console.error("Error fetching requests:", error));
+            });
+        }
+
+        // Populate Table Function
+        function populateTable(resources, requests) {
+            const tbody = document.getElementById('data-table-body');
+            tbody.innerHTML = '';
+            let totalRequests = 0;
+            let totalApprovals = 0;
+            let resourceCounts = {};
+
+            // Loop through resources and check the corresponding request
+            for (const resourceId in resources) {
+                const resource = resources[resourceId];
+                const request = requests[resourceId] || {};  // Default empty request if none exists
+
+                totalRequests++;
+
+                if (request.status === 'Approved') {
+                    totalApprovals++;
+                }
+
+                resourceCounts[resourceId] = (resourceCounts[resourceId] || 0) + 1;
+
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${resource.name}</td>
+                    <td class="resource-details">${resource.details}</td>
+                    <td>${resourceId}</td>  <!-- Display Resource ID -->
+                    <td class="request-details">${request.details || ''}</td>
+                    <td>${request.status || 'Pending'}</td>
+                    <td>
+                        <button onclick="editResource('${resourceId}', '${resource.name}', '${resource.details}')">Edit</button>
+                        <button onclick="deleteResource('${resourceId}')">Delete</button>
+                        <button onclick="approveRequest('${resourceId}')">Approve</button>
+                            <button onclick="rejectRequest('${resourceId}')">Reject</button>
+                            <input type="text" id="comment-${resourceId}" placeholder="Add comment">
+                            <button onclick="addComment('${resourceId}')">Add Comment</button>
+                        </td>
+                `;
+                tbody.appendChild(row);
             }
+
+            document.getElementById('totalRequests').textContent = totalRequests;
+            document.getElementById('totalApprovals').textContent = totalApprovals;
+            generateChart(resourceCounts);
         }
 
-        function updateStatus(requestId, status, comment) {
-            db.ref(`requests/${requestId}`).update({ status: { status, comment } })
-                .then(() => alert(`Request ${status.toLowerCase()}`))
-                .catch(error => console.error("Error updating status:", error));
+        // Reset Form
+        function resetForm() {
+            document.getElementById('resourceId').value = '';  // Clear Resource ID input
+            document.getElementById('resourceName').value = '';
+            document.getElementById('resourceDetails').value = '';
+            document.getElementById('addResourceBtn').style.display = 'inline-block';
+            document.getElementById('updateResourceBtn').style.display = 'none';
         }
 
+        // Delete Resource Function
         function deleteResource(resourceId) {
             db.ref(`resources/${resourceId}`).remove()
                 .then(() => alert("Resource deleted successfully"))
                 .catch(error => console.error("Error deleting resource:", error));
         }
 
-        function populateTable(resources, requests) {
-            const tbody = document.getElementById('data-table-body');
-            tbody.innerHTML = '';
-            for (const resourceId in resources) {
-                const resource = resources[resourceId];
-                const request = requests[resourceId] || {};
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${resource.name}</td>
-                    <td class="resource-details">${resource.details}</td>
-                    <td>${request.id || 'N/A'}</td>
-                    <td class="request-details">${request.details || ''}</td>
-                    <td>${request.status ? request.status.status : 'Pending'}</td>
-                    <td>
-                        <button onclick="updateStatus('${resourceId}', 'Approved', 'Approved by Admin')">Approve</button>
-                        <button onclick="updateStatus('${resourceId}', 'Rejected', 'Rejected by Admin')">Reject</button>
-                        <button onclick="deleteResource('${resourceId}')">Delete</button>
-                        <button onclick="editResource('${resourceId}', '${resource.name}', '${resource.details}')">Edit</button>
-                    </td>
-                `;
-                tbody.appendChild(row);
+        // Approve Request Function
+        function approveRequest(requestId) {
+            const requestRef = db.ref(`requests/${requestId}`);
+            requestRef.update({ status: 'Approved' })
+                .then(() => {
+                    alert("Request approved");
+                    updateTable();  // Refresh the table
+                })
+                .catch(error => console.error("Error approving request:", error));
+        }
+
+        // Reject Request Function
+        function rejectRequest(requestId) {
+            const requestRef = db.ref(`requests/${requestId}`);
+            requestRef.update({ status: 'Rejected' })
+                .then(() => {
+                    alert("Request rejected");
+                    updateTable();  // Refresh the table
+                })
+                .catch(error => console.error("Error rejecting request:", error));
+        }
+
+        // Add Comment Function
+        function addComment(requestId) {
+            const comment = document.getElementById(`comment-${requestId}`).value;
+            if (comment.trim() === "") {
+                alert("Please enter a comment.");
+                return;
             }
+            const requestRef = db.ref(`requests/${requestId}`);
+            requestRef.update({ comment })
+                .then(() => {
+                    alert("Comment added");
+                    updateTable();  // Refresh the table
+                })
+                .catch(error => console.error("Error adding comment:", error));
         }
 
-        function editResource(resourceId, name, details) {
-            document.getElementById('resourceId').value = resourceId;
-            document.getElementById('resourceName').value = name;
-            document.getElementById('resourceDetails').value = details;
-        }
-
-        function loadChart(requests) {
-            const labels = Object.keys(requests);
-            const data = labels.map(id => requests[id].count || 1);
-            new Chart(document.getElementById('requestChart'), {
+        // Generate Chart Function
+        function generateChart(resourceCounts) {
+            const ctx = document.getElementById('requestChart').getContext('2d');
+            const labels = Object.keys(resourceCounts);
+            const data = Object.values(resourceCounts);
+            const chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels,
-                    datasets: [{ label: 'Requests', data, backgroundColor: 'blue' }]
+                    labels: labels,
+                    datasets: [{
+                        label: 'Request Counts',
+                        data: data,
+                        backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
                 }
             });
         }
 
-        // Real-time data fetching with event listeners
-        db.ref('resources').on('value', (resourcesSnap) => {
-            const resources = resourcesSnap.val() || {};
-            db.ref('requests').once('value')
-                .then((requestsSnap) => {
-                    const requests = requestsSnap.val() || {};
-                    populateTable(resources, requests);
-                    loadChart(requests);
-                })
-                .catch(error => console.error("Error fetching requests:", error));
-        });
-
+        // Initialize Table on Page Load
+        window.onload = updateTable;
     </script>
 </body>
 </html>
