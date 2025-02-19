@@ -159,12 +159,66 @@
             }
         }
 
-        // Load chart data
-        function loadChart(requests) {
-            const labels = Object.keys(requests);
-            const data = labels.map(id => requests[id].count || 1);
-            
-            new Chart(document.getElementById('requestChart'), {
+        // Reset Form
+        function resetForm() {
+            document.getElementById('resourceId').value = '';  // Clear Resource ID input
+            document.getElementById('resourceName').value = '';
+            document.getElementById('resourceDetails').value = '';
+            document.getElementById('addResourceBtn').style.display = 'inline-block';
+            document.getElementById('updateResourceBtn').style.display = 'none';
+        }
+
+        // Delete Resource Function
+        function deleteResource(resourceId) {
+            db.ref(`resources/${resourceId}`).remove()
+                .then(() => alert("Resource deleted successfully"))
+                .catch(error => console.error("Error deleting resource:", error));
+        }
+
+        // Approve Request Function
+        function approveRequest(requestId) {
+            const requestRef = db.ref(`requests/${requestId}`);
+            requestRef.update({ status: 'Approved' })
+                .then(() => {
+                    alert("Request approved");
+                    updateTable();  // Refresh the table
+                })
+                .catch(error => console.error("Error approving request:", error));
+        }
+
+        // Reject Request Function
+        function rejectRequest(requestId) {
+            const requestRef = db.ref(`requests/${requestId}`);
+            requestRef.update({ status: 'Rejected' })
+                .then(() => {
+                    alert("Request rejected");
+                    updateTable();  // Refresh the table
+                })
+                .catch(error => console.error("Error rejecting request:", error));
+        }
+
+        // Add Comment Function
+        function addComment(requestId) {
+            const comment = document.getElementById(`comment-${requestId}`).value;
+            if (comment.trim() === "") {
+                alert("Please enter a comment.");
+                return;
+            }
+            const requestRef = db.ref(`requests/${requestId}`);
+            requestRef.update({ comment })
+                .then(() => {
+                    alert("Comment added");
+                    updateTable();  // Refresh the table
+                })
+                .catch(error => console.error("Error adding comment:", error));
+        }
+
+        // Generate Chart Function
+        function generateChart(resourceCounts) {
+            const ctx = document.getElementById('requestChart').getContext('2d');
+            const labels = Object.keys(resourceCounts);
+            const data = Object.values(resourceCounts);
+            const chart = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels,
