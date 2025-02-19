@@ -2,7 +2,8 @@
 body {
     font-family: poppins;
     background-color: #0C0910;
-    margin: 3%;
+    margin-left: 3%;
+    margin-right: 3%;
         }
         
 /* Inline CSS - you can move this to a separate style.css file */
@@ -52,7 +53,7 @@ section {
 
 .p {
     font-size: 1.4rem;
-    color: #555;
+    color: #fdfdfd;
 }
 
 /* Optional: Add hover effects */
