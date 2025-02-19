@@ -49,7 +49,7 @@ async function loginUser(email, password) {
         console.error("Login error:", error);
         res.status(500).json({ error: 'Server error during login' }); // More descriptive error
     }
-});
+};
 
 
 app.use('/api/auth', router); // Mount the router at the '/api/auth' path
