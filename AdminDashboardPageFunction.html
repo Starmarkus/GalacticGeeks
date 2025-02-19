@@ -24,6 +24,8 @@
         <input type="text" id="resourceName" placeholder="Resource Name">
         <input type="text" id="resourceDetails" placeholder="Resource Details">
         <button onclick="addResource()">Add Resource</button>
+        <input type="hidden" id="resourceId">
+        <button onclick="updateResource()">Update Resource</button>
     </div>
     <h2>Resource and Request Data</h2>
     <table>
@@ -41,39 +43,57 @@
     </table>
     <h2>Most Requested Resources</h2>
     <canvas id="requestChart"></canvas>
-    <script type="module">
-        import { initializeApp } from "firebase/app";
-        import { getDatabase, ref, get, set, remove } from "firebase/database";
-
+    <script>
         const firebaseConfig = {
             apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
-  authDomain: "system-galacticgeeks.firebaseapp.com",
-  databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "system-galacticgeeks",
-  storageBucket: "system-galacticgeeks.firebasestorage.app",
-  messagingSenderId: "835850762785",
-  appId: "1:835850762785:web:d2e42efe2422dac089c160",
-  measurementId: "G-5S4L5M5GG5"
+            authDomain: "system-galacticgeeks.firebaseapp.com",
+            databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "system-galacticgeeks",
+            storageBucket: "system-galacticgeeks.firebasestorage.app",
+            messagingSenderId: "835850762785",
+            appId: "1:835850762785:web:d2e42efe2422dac089c160",
+            measurementId: "G-5S4L5M5GG5"
         };
 
-        const app = initializeApp(firebaseConfig);
-        const db = getDatabase(app);
-        const resourcesRef = ref(db, 'resources');
-        const requestsRef = ref(db, 'requests');
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
 
         function addResource() {
             const name = document.getElementById('resourceName').value;
             const details = document.getElementById('resourceDetails').value;
-            const newResourceRef = ref(db, 'resources/' + Date.now());
-            set(newResourceRef, { name, details });
+            if (name.trim() === "" || details.trim() === "") {
+                alert("Please enter valid resource details.");
+                return;
+            }
+            const newResourceRef = db.ref('resources').push();
+            newResourceRef.set({ name, details })
+                .then(() => alert("Resource added successfully"))
+                .catch(error => console.error("Error adding resource:", error));
+        }
+
+        function updateResource() {
+            const resourceId = document.getElementById('resourceId').value;
+            const name = document.getElementById('resourceName').value;
+            const details = document.getElementById('resourceDetails').value;
+            if (resourceId) {
+                db.ref(`resources/${resourceId}`).update({ name, details })
+                    .then(() => alert("Resource updated successfully"))
+                    .catch(error => console.error("Error updating resource:", error));
+            } else {
+                alert("No resource selected for update.");
+            }
         }
 
         function updateStatus(requestId, status, comment) {
-            set(ref(db, `requests/${requestId}/status`), { status, comment });
+            db.ref(`requests/${requestId}`).update({ status: { status, comment } })
+                .then(() => alert(`Request ${status.toLowerCase()}`))
+                .catch(error => console.error("Error updating status:", error));
         }
 
         function deleteResource(resourceId) {
-            remove(ref(db, `resources/${resourceId}`));
+            db.ref(`resources/${resourceId}`).remove()
+                .then(() => alert("Resource deleted successfully"))
+                .catch(error => console.error("Error deleting resource:", error));
         }
 
         function populateTable(resources, requests) {
@@ -86,17 +106,24 @@
                 row.innerHTML = `
                     <td>${resource.name}</td>
                     <td class="resource-details">${resource.details}</td>
-                    <td>${requestId || 'N/A'}</td>
+                    <td>${request.id || 'N/A'}</td>
                     <td class="request-details">${request.details || ''}</td>
                     <td>${request.status ? request.status.status : 'Pending'}</td>
                     <td>
                         <button onclick="updateStatus('${resourceId}', 'Approved', 'Approved by Admin')">Approve</button>
                         <button onclick="updateStatus('${resourceId}', 'Rejected', 'Rejected by Admin')">Reject</button>
                         <button onclick="deleteResource('${resourceId}')">Delete</button>
+                        <button onclick="editResource('${resourceId}', '${resource.name}', '${resource.details}')">Edit</button>
                     </td>
                 `;
                 tbody.appendChild(row);
             }
+        }
+
+        function editResource(resourceId, name, details) {
+            document.getElementById('resourceId').value = resourceId;
+            document.getElementById('resourceName').value = name;
+            document.getElementById('resourceDetails').value = details;
         }
 
         function loadChart(requests) {
@@ -111,12 +138,18 @@
             });
         }
 
-        Promise.all([get(resourcesRef), get(requestsRef)]).then(([resourcesSnap, requestsSnap]) => {
+        // Real-time data fetching with event listeners
+        db.ref('resources').on('value', (resourcesSnap) => {
             const resources = resourcesSnap.val() || {};
-            const requests = requestsSnap.val() || {};
-            populateTable(resources, requests);
-            loadChart(requests);
+            db.ref('requests').once('value')
+                .then((requestsSnap) => {
+                    const requests = requestsSnap.val() || {};
+                    populateTable(resources, requests);
+                    loadChart(requests);
+                })
+                .catch(error => console.error("Error fetching requests:", error));
         });
+
     </script>
 </body>
 </html>
