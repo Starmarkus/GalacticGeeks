@@ -189,8 +189,6 @@ margin-bottom: 5px;
 width: 75%;
 border: 2px solid white;
 }
-
-
 .userFooter {
         outline: white;
         width: 100%;
@@ -198,3 +196,15 @@ border: 2px solid white;
         margin-bottom: 5px;
         background-color: lightblue;
     }
+
+    
+    label, input, button {
+        display: block;
+        margin-bottom: 10px;
+    }
+    
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .resource-details, .request-details { font-style: italic; color: #666; }
+        .admin-controls { margin-bottom: 20px; }
