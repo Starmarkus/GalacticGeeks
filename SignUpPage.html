@@ -61,10 +61,15 @@ const firebaseConfig = {
     measurementId: "G-5S4L5M5GG5"
 };
 
+// Initialize Firebase using the modular SDK
+import { initializeApp } from "firebase/app";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
+
 // Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 // Show notification
 function showNotification(message, isError = false) {
@@ -85,11 +90,11 @@ function showNotification(message, isError = false) {
 async function signUpUser(firstName, lastName, email, password) {
     try {
         // Create user in Firebase Authentication
-        const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const user = userCredential.user;
 
         // Store additional user data in Firestore
-        await db.collection('users').doc(user.uid).set({
+        await setDoc(doc(db, "users", user.uid), {
             firstName: firstName,
             lastName: lastName,
             email: email,

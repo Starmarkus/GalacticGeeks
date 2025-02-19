@@ -56,10 +56,15 @@ const firebaseConfig = {
     measurementId: "G-5S4L5M5GG5"
 };
 
+// Initialize Firebase using the correct modular approach
+import { initializeApp } from "firebase/app";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
+import { getFirestore } from "firebase/firestore";
+
 // Initialize Firebase
-const app = firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db = firebase.firestore();
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
 // Show notification
 function showNotification(message, isError = false) {
@@ -86,7 +91,7 @@ document.getElementById('loginForm').addEventListener('submit', async function(e
 
     // Call Firebase Authentication to log in
     try {
-        await firebase.auth().signInWithEmailAndPassword(email, password);
+        await signInWithEmailAndPassword(auth, email, password);
         // Show success notification
         showNotification('Login Successful!', false);
 
