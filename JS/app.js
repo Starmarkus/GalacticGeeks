@@ -1,11 +1,13 @@
 // Firebase configuration
 const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_PROJECT.firebaseapp.com",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_PROJECT.appspot.com",
-    messagingSenderId: "YOUR_MESSAGING_ID",
-    appId: "YOUR_APP_ID"
+    apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
+    authDomain: "system-galacticgeeks.firebaseapp.com",
+    databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "system-galacticgeeks",
+    storageBucket: "system-galacticgeeks.firebasestorage.app",
+    messagingSenderId: "835850762785",
+    appId: "1:835850762785:web:d2e42efe2422dac089c160",
+    measurementId: "G-5S4L5M5GG5"
 };
 
 // Initialize Firebase
