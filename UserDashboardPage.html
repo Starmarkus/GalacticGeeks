@@ -102,7 +102,7 @@
             const section = document.createElement('section');
             section.innerHTML = `
                 <h2>${resource.name}</h2>
-                <p>${resource.description || "No description available"}</p>
+                <p>${resource.description || resource.details}</p>
                 <button onclick="requestResource('${resource.name}')">Request</button>
             `;
             return section;
@@ -154,8 +154,7 @@
                 const requests = snapshot.val();
                 Object.values(requests).forEach(request => {
                     if (request.status !== 'pending') {
-                        document.getElementById('notification').textContent = 
-                            `Your request for ${request.name} has been ${request.status}`;
+                        document.getElementById('notification').textContent = `Your request for ${request.name} has been ${request.status}`;
                         document.getElementById('notification').style.display = 'block';
                     }
                 });
