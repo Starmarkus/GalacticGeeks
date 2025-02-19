@@ -33,6 +33,7 @@
         <br><br>
         <input type="file" id="fileUpload" />
         <button onclick="uploadFile()">Upload File</button>
+        <button onclick="removeFile()">Remove File</button>
     </div>
 
     <!-- Resource and Request Data Table -->
@@ -244,6 +245,20 @@
             } else {
                 alert("No file selected.");
             }
+        }
+// File Remove Function
+     function removeFile() {
+            const dt = new DataTransfer();
+  const input = document.getElementById('files');
+  const { files } = input;
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    if (index !== i) {
+      dt.items.add(file); // here you exclude the file. thus removing it.
+    }
+  }
+  /* Assigning data transfer object files to the 'input' variable will not write the data transfer files to it because it doesn't have the reference to the element: Instead write, */
+  document.getElementById('files') = dt.files; // Assign the updates list
         }
 
         // Initialize Table on Page Load
