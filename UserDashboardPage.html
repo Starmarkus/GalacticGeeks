@@ -8,21 +8,15 @@
 
     <style>
         /* Basic Styling */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        
         body {
-            background-color: #0C0910;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
+           /*  align-items: center; */
+           /* min-height: 100vh; */
+           /* padding: 20px; */
         }
 
-       
         #root {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -66,22 +60,36 @@
 </head>
 <body>
     <div class ="TempNav">
-        Temporary Navbar location
+        <ul>
+            <li><a href="#"> 
+                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
+                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
+                  </svg>
+            </a>
+                </li>
+            <li><a href="#">About</a></li>
+            <li><a href="#">Contact</a></li>
+        </ul>
     </div>
     <div class ="container">
         <div class ="menuContainer">
-            Temporary menu location
+            <button class="menuButtonStyling">Button 1</button>
+            <button class="menuButtonStyling">Button 2</button>
         </div>
         <div class ="adminResourceContainer">
     <div id="root"></div>
-    <h2 style="color: white;">Request a Resource</h2>
 
+    <div class = "requestDiv">
+    <h2 style="color: white; text-align: center;">Request a Resource</h2>
+    
     <form id="request-form">
         <input type="text" id="resource-name" placeholder="Enter resource name" required>
-        <button type="submit">Request</button>
+        <button type="submit" >Request</button>
     </form>
-
+    
     <div id="notification" style="display: none; margin-top: 10px; color: green;"></div>
+    </div>
 
     <!--  Firebase SDK (Compat Mode) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -90,7 +98,7 @@
 </div>
 </div>
 <div class = "userFooter">
-    Footer Location
+    <a>dfgh</a>
 </div>
     <script>
         //  Firebase Configuration
