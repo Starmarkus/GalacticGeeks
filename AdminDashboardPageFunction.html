@@ -4,9 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Resource Management</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Link to external stylesheet -->
     <style>
-        
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        h1 { margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        .resource-details, .request-details { font-style: italic; color: #666; }
+        .admin-controls { margin-bottom: 20px; }
     </style>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -56,8 +61,14 @@
         function addResource() {
             const name = document.getElementById('resourceName').value;
             const details = document.getElementById('resourceDetails').value;
+            if (name.trim() === "" || details.trim() === "") {
+                alert("Please enter valid resource details.");
+                return;
+            }
             const newResourceRef = db.ref('resources').push();
-            newResourceRef.set({ name, details });
+            newResourceRef.set({ name, details })
+                .then(() => alert("Resource added successfully"))
+                .catch(error => console.error("Error adding resource:", error));
         }
 
         function updateResource() {
@@ -65,16 +76,24 @@
             const name = document.getElementById('resourceName').value;
             const details = document.getElementById('resourceDetails').value;
             if (resourceId) {
-                db.ref(`resources/${resourceId}`).update({ name, details });
+                db.ref(`resources/${resourceId}`).update({ name, details })
+                    .then(() => alert("Resource updated successfully"))
+                    .catch(error => console.error("Error updating resource:", error));
+            } else {
+                alert("No resource selected for update.");
             }
         }
 
         function updateStatus(requestId, status, comment) {
-            db.ref(`requests/${requestId}/status`).set({ status, comment });
+            db.ref(`requests/${requestId}`).update({ status: { status, comment } })
+                .then(() => alert(`Request ${status.toLowerCase()}`))
+                .catch(error => console.error("Error updating status:", error));
         }
 
         function deleteResource(resourceId) {
-            db.ref(`resources/${resourceId}`).remove();
+            db.ref(`resources/${resourceId}`).remove()
+                .then(() => alert("Resource deleted successfully"))
+                .catch(error => console.error("Error deleting resource:", error));
         }
 
         function populateTable(resources, requests) {
@@ -119,12 +138,18 @@
             });
         }
 
-        Promise.all([db.ref('resources').get(), db.ref('requests').get()]).then(([resourcesSnap, requestsSnap]) => {
+        // Real-time data fetching with event listeners
+        db.ref('resources').on('value', (resourcesSnap) => {
             const resources = resourcesSnap.val() || {};
-            const requests = requestsSnap.val() || {};
-            populateTable(resources, requests);
-            loadChart(requests);
+            db.ref('requests').once('value')
+                .then((requestsSnap) => {
+                    const requests = requestsSnap.val() || {};
+                    populateTable(resources, requests);
+                    loadChart(requests);
+                })
+                .catch(error => console.error("Error fetching requests:", error));
         });
+
     </script>
 </body>
 </html>
