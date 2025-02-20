@@ -58,7 +58,8 @@
                 <button id="addResourceBtn">Add Resource</button>
                 <button onclick="removeFile()">Remove File</button>
             </div>
-
+            <input type="text" id="searchBar" placeholder="Search by Resource Name" oninput="filterResources()">
+            <br><br>
             <h2>Resource and Request Data</h2>
             <table>
                 <thead>
@@ -165,6 +166,14 @@
             } else {
                 saveResource(resourceId, resourceData);
             }
+        }
+        function filterResources() {
+            const searchQuery = document.getElementById('searchBar').value.toLowerCase();
+            const tbody = document.getElementById('data-table-body');
+             Array.from(tbody.rows).forEach(row => {
+                const resourceName = row.cells[0].textContent.toLowerCase();
+                row.style.display = resourceName.includes(searchQuery) ? '' : 'none';
+            });
         }
 
         function saveResource(resourceId, resourceData) {
