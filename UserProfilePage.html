@@ -1,34 +1,251 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>User Dashboard</title>
-        <link rel="stylesheet" href="styles.css"> <!-- External CSS -->
-    
-        <style>
-            
-        </style>
-    </head>
-    <body>
-     <div class="ProfileIconNav">
-        <ul>
-            <li><a href="#"> 
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+
+    <style>
+        .centerUserCardDiv {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .rounded-rectangle {
+            width: 80%;
+            height: 150px;
+            background-color: #3498db; 
+            border-radius: 60px; 
+            display: flex;
+            align-items: center;
+            padding: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+        }
+
+        .icon {
+            font-size: 80px;
+            margin-right: 30px;
+        }
+
+        .text-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .username {
+            font-size: 30px;
+            font-weight: bold;
+        }
+
+        .welcome-message {
+            font-size: 25px;
+        }
+
+        .heading {
+            font-size: 40px;
+            font-weight: bold;
+            padding-right: 8%;
+            margin-left: auto;
+        }
+
+        .user-detail-container {
+            width: 60%;
+            margin: 30px auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            font-family: Arial, sans-serif;
+        }
+
+        .detail-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .detail-label {
+            font-weight: bold;
+            width: 120px;
+        }
+
+        .detail-box {
+            flex: 1;
+            height: 35px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+        }
+
+        .detail-box input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .phone-input {
+            display: flex;
+            gap: 5px;
+        }
+
+        .phone-box {
+            width: 50px;
+            text-align: center;
+            height: 35px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+        }
+
+        .phone-number {
+            width: 100px;
+            height: 35px;
+            background-color: #f0f0f0;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            padding: 5px 10px;
+            border: 1px solid #ccc;
+        }
+
+        .button-container {
+            width: 60%;
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin: 20px auto 0;
+        }
+
+        .button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        .edit-btn {
+            background-color: #f1c40f;
+            color: white;
+        }
+
+        .back-btn {
+            background-color: #95a5a6;
+            color: white;
+        }
+
+        .clear-btn {
+            background-color: #e74c3c;
+            color: white;
+            display: none; /* Initially hidden */
+        }
+
+        .save-btn {
+            background-color: #2ecc71;
+            color: white;
+            display: none; /* Initially hidden */
+        }
+
+        .button:hover {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="centerUserCardDiv">
+        <div class="rounded-rectangle">
+            <div class="icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
                     <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
                     <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
-                  </svg>
-            </a>
-                </li>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Contact</a></li>
-        </ul>
-     </div>   
+                </svg>
+            </div>
 
+            <div class="text-container">
+                <div class="username">Username</div>
+                <div class="welcome-message">Welcome to User Profile</div>
+            </div>
 
+            <div class="heading">Welcome To User Profile</div>
+        </div>
+    </div>
 
+    <div class="user-detail-container">
+        <div class="detail-row">
+            <div class="detail-label">First Name:</div>
+            <div class="detail-box"><input type="text" id="firstName" value="John" disabled></div>
+        </div>
 
+        <div class="detail-row">
+            <div class="detail-label">Last Name:</div>
+            <div class="detail-box"><input type="text" id="lastName" value="Doe" disabled></div>
+        </div>
 
+        <div class="detail-row">
+            <div class="detail-label">Email:</div>
+            <div class="detail-box"><input type="text" id="email" value="john.doe@example.com" disabled></div>
+        </div>
 
+        <div class="detail-row">
+            <div class="detail-label">Location:</div>
+            <div class="detail-box"><input type="text" id="location" value="New York, USA" disabled></div>
+        </div>
 
-    </body>
+        <div class="detail-row">
+            <div class="detail-label">Phone:</div>
+            <div class="phone-input">
+                <div class="phone-box">+123</div>
+                <div class="phone-number"><input type="text" id="phone" value="4567890" disabled></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="button-container">
+        <button class="button back-btn">Back</button>
+        <button class="button edit-btn" onclick="enableEditing()">Edit</button>
+        <button class="button clear-btn" onclick="clearFields()">Clear</button>
+        <button class="button save-btn" onclick="saveChanges()">Save</button>
+    </div>
+
+    <script>
+        function enableEditing() {
+            document.querySelectorAll('.detail-box input').forEach(input => input.removeAttribute('disabled'));
+            document.querySelector('.edit-btn').style.display = 'none';
+            document.querySelector('.clear-btn').style.display = 'inline-block'; // Show Clear button
+            document.querySelector('.save-btn').style.display = 'inline-block';  // Show Save button
+        }
+
+        function saveChanges() {
+            document.querySelectorAll('.detail-box input').forEach(input => input.setAttribute('disabled', 'true'));
+            document.querySelector('.edit-btn').style.display = 'inline-block';
+            document.querySelector('.clear-btn').style.display = 'none';  // Hide Clear button
+            document.querySelector('.save-btn').style.display = 'none';   // Hide Save button
+        }
+
+        function clearFields() {
+            document.getElementById("firstName").value = "";
+            document.getElementById("lastName").value = "";
+            document.getElementById("email").value = "";
+            document.getElementById("location").value = "";
+            document.getElementById("phone").value = "";
+        }
+    </script>
+
+</body>
+</html>
