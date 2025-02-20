@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -209,7 +208,6 @@
                         <td>${resource.fileUrl ? `<a href="${resource.fileUrl}" target="_blank">View File</a>` : 'No File'}</td>
                     `;
                     tbody.appendChild(row);
-
                     totalRequests++; // Increment on every resource
                     if (resource.status === 'Approved') {
                         totalApprovals++; // Increment approvals
@@ -232,6 +230,7 @@
             document.getElementById('resourceName').value = '';
             document.getElementById('resourceDetails').value = '';
             document.getElementById('fileUpload').value = ''; // Clear file input
+            document.getElementById('updateResourceBtn').style.display = 'none'; // Hide update button again
         }
 
         function approveRequest(id) {
@@ -246,11 +245,51 @@
             db.ref('resources/' + id).remove();
         }
 
+        // Function to handle editing resources
         function editResource(id, name, details) {
             document.getElementById('resourceId').value = id;
             document.getElementById('resourceName').value = name;
             document.getElementById('resourceDetails').value = details;
-            document.getElementById('updateResourceBtn').style.display = 'block'; // Show the update button
+            document.getElementById('updateResourceBtn').style.display = 'block'; // Show the update button 
+            document.getElementById('addResourceBtn').style.display = 'none'; // Optionally hide add button
+        }
+
+        // Function to handle updating resources
+        function updateResource() {
+            const resourceId = document.getElementById('resourceId').value.trim();
+            const name = document.getElementById('resourceName').value.trim();
+            const details = document.getElementById('resourceDetails').value.trim();
+            const fileInput = document.getElementById('fileUpload');
+            const file = fileInput.files[0];
+            const resourceData = { name, details, status: 'Pending', fileUrl: '', requestCount: 0 };
+
+            if (file) {
+                const fileRef = storage.ref('uploads/' + file.name);
+                fileRef.put(file).then(snapshot => {
+                    return snapshot.ref.getDownloadURL();
+                }).then(url => {
+                    resourceData.fileUrl = url;
+                    saveUpdatedResource(resourceId, resourceData);
+                }).catch(error => {
+                    console.error("File upload error:", error);
+                    alert("Error uploading file. Please check the console for details.");
+                });
+            } else {
+                saveUpdatedResource(resourceId, resourceData);
+            }
+        }
+
+        function saveUpdatedResource(resourceId, resourceData) {
+            db.ref('resources/' + resourceId).update(resourceData)
+                .then(() => {
+                    alert("Resource updated successfully");
+                    resetForm();
+                    updateTable();
+                })
+                .catch(error => {
+                    console.error("Error updating resource:", error);
+                    alert("Error updating resource. Please check the console for details.");
+                });
         }
 
         function removeFile() {
@@ -260,10 +299,9 @@
 
         // Adding event listeners for buttons
         document.getElementById('addResourceBtn').addEventListener('click', addResource);
-     ;
+        document.getElementById('updateResourceBtn').addEventListener('click', updateResource); // Add event listener for update
 
         window.onload = updateTable;
     </script>
 </body>
 </html>
-
