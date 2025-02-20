@@ -191,15 +191,10 @@
 
         // Delete Resource
         function deleteResource(resourceId) {
-    if (confirm("Are you sure you want to delete this resource?")) {
-        db.ref('resources/' + resourceId).remove()
-            .then(() => {
-                alert("Resource deleted successfully");
-                removeFile(); // Remove the file when resource is deleted
-            })
-            .catch(error => console.error("Error deleting resource:", error));
-    }
-}
+            db.ref('resources/' + resourceId).remove()
+                .then(() => alert("Resource deleted successfully"))
+                .catch(error => console.error("Error deleting resource:", error));
+        }
 
         // Update Statistics
         function updateStats() {
@@ -252,11 +247,20 @@
             }
         }
 // File Remove Function
-function removeFile() {
-    const fileInput = document.getElementById('fileUpload');
-    fileInput.value = ""; // Clears the selected file
-    alert("File removed successfully.");
-}
+     function removeFile() {
+            const dt = new DataTransfer();
+  const input = document.getElementById('files');
+  const { files } = input;
+  for (let i = 0; i < files.length; i++) {
+    const file = files[i];
+    if (index !== i) {
+      dt.items.add(file); // here you exclude the file. thus removing it.
+    }
+  }
+  /* Assigning data transfer object files to the 'input' variable will not write the data transfer files to it because it doesn't have the reference to the element: Instead write, */
+  document.getElementById('files') = dt.files; // Assign the updates list
+        }
+
         // Initialize Table on Page Load
         window.onload = updateTable;
     </script>
