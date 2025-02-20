@@ -12,9 +12,9 @@
         body {
             display: flex;
             flex-direction: column;
-           /*  align-items: center; */
-           /* min-height: 100vh; */
-           /* padding: 20px; */
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
         }
 
         #root {
@@ -22,6 +22,7 @@
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: 20px;
             max-width: 1200px;
+            margin-top: 20px;
         }
 
         section {
@@ -41,7 +42,7 @@
         }
 
         h2 {
-            color: rgb(0, 0, 0);
+            color: black;
             font-size: 1.8rem;
             margin-bottom: 10px;
         }
@@ -56,21 +57,21 @@
             transform: translateY(-3px);
             transition: 0.3s ease;
         }
+
+        .notification {
+            background: #28a745;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            display: none;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
     <div class ="TempNav">
-        <ul>
-            <li><a href="#"> 
-                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
-                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
-                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
-                  </svg>
-            </a>
-                </li>
-            <li><a href="#">About</a></li>
-            <li><a href="#">Contact</a></li>
-        </ul>
+        Temporary Navbar location
     </div>
     <div class ="container">
         <div class ="menuContainer">
@@ -81,17 +82,14 @@
         </div>
         <div class ="adminResourceContainer">
     <div id="root"></div>
+    <h2 style="color: white;">Request a Resource</h2>
 
-    <div class = "requestDiv">
-    <h2 style="color: white; text-align: center;">Request a Resource</h2>
-    
     <form id="request-form">
         <input type="text" id="resource-name" placeholder="Enter resource name" required>
-        <button type="submit" >Request</button>
+        <button type="submit">Request</button>
     </form>
-    
+
     <div id="notification" style="display: none; margin-top: 10px; color: green;"></div>
-    </div>
 
     <!--  Firebase SDK (Compat Mode) -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -100,10 +98,10 @@
 </div>
 </div>
 <div class = "userFooter">
-    <a>dfgh</a>
+    Footer Location
 </div>
     <script>
-        //  Firebase Configuration
+        // Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
             authDomain: "system-galacticgeeks.firebaseapp.com",
@@ -115,7 +113,7 @@
             measurementId: "G-5S4L5M5GG5"
         };
 
-        //  Initialize Firebase
+        // Initialize Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
 
@@ -124,64 +122,69 @@
             const section = document.createElement('section');
             section.innerHTML = `
                 <h2>${resource.name}</h2>
-                <p>${resource.description || resource.details}</p>
+                <p>${resource.description || "No details available."}</p>
                 <button onclick="requestResource('${resource.name}')">Request</button>
             `;
             return section;
         }
 
-        //  Function to Request a Resource
+        // Function to Request a Resource
         function requestResource(name) {
             db.ref('requests').push({ name, status: 'pending' })
                 .then(() => {
-                    document.getElementById('notification').textContent = 'Request submitted!';
-                    document.getElementById('notification').style.display = 'block';
+                    showNotification(`Request for "${name}" submitted!`);
                 })
-                .catch(error => console.error(" Error requesting resource:", error));
+                .catch(error => console.error("Error requesting resource:", error));
         }
 
-        //  Fetch Resources from Firebase
-        db.ref('resources').once('value')
-            .then(snapshot => {
+        // Fetch Resources from Firebase and Display Them
+        function loadResources() {
+            db.ref('resources').on('value', snapshot => {
                 if (snapshot.exists()) {
                     const resources = snapshot.val();
                     const root = document.getElementById('root');
+                    root.innerHTML = ""; // Clear before appending new
                     Object.values(resources).forEach(resource => {
                         root.appendChild(createResourceCard(resource));
                     });
                 }
-            })
-            .catch(error => console.error(" Error fetching resources:", error));
+            });
+        }
 
         // Handle Resource Requests Form Submission
         document.getElementById('request-form').addEventListener('submit', function(event) {
             event.preventDefault();
-            const resourceName = document.getElementById('resource-name').value;
-            if (!resourceName.trim()) {
+            const resourceName = document.getElementById('resource-name').value.trim();
+            if (!resourceName) {
                 alert("Please enter a resource name.");
                 return;
             }
 
             db.ref('requests').push({ name: resourceName, status: 'pending' })
                 .then(() => {
-                    document.getElementById('notification').textContent = 'Request submitted!';
-                    document.getElementById('notification').style.display = 'block';
+                    showNotification(`Request for "${resourceName}" submitted!`);
+                    document.getElementById('request-form').reset();
                 })
-                .catch(error => console.error(" Error submitting request:", error));
+                .catch(error => console.error("Error submitting request:", error));
         });
 
-        //  Listen for Updates in Resource Requests (Realtime)
-        db.ref('requests').on('value', (snapshot) => {
-            if (snapshot.exists()) {
-                const requests = snapshot.val();
-                Object.values(requests).forEach(request => {
-                    if (request.status !== 'pending') {
-                        document.getElementById('notification').textContent = `Your request for ${request.name} has been ${request.status}`;
-                        document.getElementById('notification').style.display = 'block';
-                    }
-                });
-            }
+        // Listen for Updates in Resource Requests (Real-Time)
+        db.ref('requests').on('child_changed', snapshot => {
+            const updatedRequest = snapshot.val();
+            showNotification(`Your request for "${updatedRequest.name}" has been ${updatedRequest.status}`);
         });
+
+        // Function to Show Notifications
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            notification.textContent = message;
+            notification.style.display = 'block';
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 5000);
+        }
+
+        // Load resources when the page loads
+        loadResources();
     </script>
 </body>
-</html>
