@@ -122,7 +122,7 @@
             const section = document.createElement('section');
             section.innerHTML = `
                 <h2>${resource.name}</h2>
-                <p>${resource.description || "No details available."}</p>
+                <p>${resource.description || resource.details}</p>
                 <button onclick="requestResource('${resource.name}')">Request</button>
             `;
             return section;

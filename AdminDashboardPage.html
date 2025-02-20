@@ -1,32 +1,269 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Home</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Link to external stylesheet -->
+    <title>Admin Home & Resource Management</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            color: white;
+            background-color: #1e1e1e;
+            overflow-y: auto;
+        }
+        h1, h2 { margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { 
+            border: 1px solid #444; 
+            padding: 8px; 
+            text-align: left; 
+            color: white;
+        }
+        th { background-color: #333; }
+        .resource-details { font-style: italic; color: #aaa; }
+        .admin-controls { margin-bottom: 20px; }
+        .stats { margin-top: 20px; }
+        .stats div { margin-bottom: 10px; }
+        canvas { max-width: 100%; }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    
-    <div class ="TempNav">
-        Temporary Navbar location
+
+    <div class="TempNav">
+        <h2>Temporary Navbar Location</h2>
     </div>
 
-<div class ="container">
-    <div class ="menuContainer">
-        Temporary menu location
-    </div>
-    <div class ="adminResourceContainer">
-        <p style = "color: white;">resource location </p>
-    </div>
-</div>
-<div class = "userFooter">
-    Footer Location
-</div>
+    <div class="container">
+        <div class="menuContainer">
+            <h2>Temporary Menu Location</h2>
+        </div>
 
+        <div class="adminResourceContainer">
+            <h1>Admin Resource Management</h1>
 
+            <div class="admin-controls">
+                <h2>Manage Resources</h2>
+                <input type="text" id="resourceName" placeholder="Resource Name">
+                <input type="text" id="resourceDetails" placeholder="Resource Details">
+                <input type="text" id="resourceId" placeholder="Resource ID">
+                <button id="updateResourceBtn" style="display: none;">Update Resource</button>
+                <br><br>
+                <input type="file" id="fileUpload">
+                <button id="addResourceBtn">Add Resource</button>
+                <button onclick="removeFile()">Remove File</button>
+            </div>
+
+            <h2>Resource and Request Data</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Resource Name</th>
+                        <th>Resource Details</th>
+                        <th>Request ID</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                        <th>Uploaded File</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body"></tbody>
+            </table>
+
+            <div class="stats">
+                <h2>Statistics</h2>
+                <div>Total Resource Requests: <span id="totalRequests">0</span></div>
+                <div>Total Approvals: <span id="totalApprovals">0</span></div>
+                <div>Most Requested Resources:</div>
+                <canvas id="requestChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="userFooter">
+        <h2>Footer Location</h2>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
+            authDomain: "system-galacticgeeks.firebaseapp.com",
+            databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "system-galacticgeeks",
+            storageBucket: "system-galacticgeeks.firebasestorage.app",
+            messagingSenderId: "835850762785",
+            appId: "1:835850762785:web:d2e42efe2422dac089c160",
+            measurementId: "G-5S4L5M5GG5"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const storage = firebase.storage();
+        let chartInstance = null;
+
+        function drawChart(data) {
+            const ctx = document.getElementById('requestChart').getContext('2d');
+            const labels = Object.keys(data);
+            const values = Object.values(data);
+
+            if (chartInstance) {
+                chartInstance.destroy();
+            }
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Most Requested Resources',
+                        data: values,
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function addResource() {
+            console.log("Add Resource called"); // Debugging line
+            const resourceId = document.getElementById('resourceId').value.trim();
+            const name = document.getElementById('resourceName').value.trim();
+            const details = document.getElementById('resourceDetails').value.trim();
+            const fileInput = document.getElementById('fileUpload');
+            const file = fileInput.files[0];
+
+            if (!resourceId || !name || !details) {
+                alert("Please enter valid resource details and a Resource ID.");
+                return;
+            }
+
+            const resourceData = { name, details, status: 'Pending', fileUrl: '', requestCount: 0 };
+
+            if (file) {
+                const fileRef = storage.ref('uploads/' + file.name);
+                fileRef.put(file).then(snapshot => {
+                    return snapshot.ref.getDownloadURL();
+                }).then(url => {
+                    resourceData.fileUrl = url;
+                    saveResource(resourceId, resourceData);
+                }).catch(error => {
+                    console.error("File upload error:", error);
+                    alert("Error uploading file. Please check the console for details.");
+                });
+            } else {
+                saveResource(resourceId, resourceData);
+            }
+        }
+
+        function saveResource(resourceId, resourceData) {
+            db.ref('resources/' + resourceId).set(resourceData)
+                .then(() => {
+                    alert("Resource added successfully");
+                    resetForm();
+                    updateTable();
+                })
+                .catch(error => {
+                    console.error("Error adding resource:", error);
+                    alert("Error adding resource. Please check the console for details.");
+                });
+        }
+
+        function updateTable() {
+            db.ref('resources').on('value', (snapshot) => {
+                const tbody = document.getElementById('data-table-body');
+                tbody.innerHTML = '';
+
+                let totalRequests = 0; // Initialize counts
+                let totalApprovals = 0; 
+                const requestCountData = {};
+
+                snapshot.forEach(childSnapshot => {
+                    const resource = childSnapshot.val();
+                    const resourceId = childSnapshot.key;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${resource.name}</td>
+                        <td class="resource-details">${resource.details}</td>
+                        <td>${resourceId}</td>
+                        <td>${resource.status}</td>
+                        <td>
+                            <button onclick="approveRequest('${resourceId}')">Approve</button>
+                            <button onclick="rejectRequest('${resourceId}')">Reject</button>
+                            <button onclick="editResource('${resourceId}', '${resource.name}', '${resource.details}')">Edit</button>
+                            <button onclick="deleteResource('${resourceId}')">Delete</button>
+                        </td>
+                        <td>${resource.fileUrl ? `<a href="${resource.fileUrl}" target="_blank">View File</a>` : 'No File'}</td>
+                    `;
+                    tbody.appendChild(row);
+
+                    totalRequests++; // Increment on every resource
+                    if (resource.status === 'Approved') {
+                        totalApprovals++; // Increment approvals
+                    }
+
+                    // Count requests for chart data
+                    requestCountData[resource.name] = (requestCountData[resource.name] || 0) + 1;
+                });
+
+                document.getElementById('totalRequests').textContent = totalRequests;
+                document.getElementById('totalApprovals').textContent = totalApprovals;
+
+                // Draw the chart with collected data
+                drawChart(requestCountData);
+            });
+        }
+
+        function resetForm() {
+            document.getElementById('resourceId').value = '';
+            document.getElementById('resourceName').value = '';
+            document.getElementById('resourceDetails').value = '';
+            document.getElementById('fileUpload').value = ''; // Clear file input
+        }
+
+        function approveRequest(id) {
+            db.ref('resources/' + id).update({ status: 'Approved' });
+        }
+
+        function rejectRequest(id) {
+            db.ref('resources/' + id).update({ status: 'Rejected' });
+        }
+
+        function deleteResource(id) {
+            db.ref('resources/' + id).remove();
+        }
+
+        function editResource(id, name, details) {
+            document.getElementById('resourceId').value = id;
+            document.getElementById('resourceName').value = name;
+            document.getElementById('resourceDetails').value = details;
+            document.getElementById('updateResourceBtn').style.display = 'block'; // Show the update button
+        }
+
+        function removeFile() {
+            // Logic to reset the file input.
+            document.getElementById('fileUpload').value = '';
+        }
+
+        // Adding event listeners for buttons
+        document.getElementById('addResourceBtn').addEventListener('click', addResource);
+     ;
+
+        window.onload = updateTable;
+    </script>
 </body>
 </html>
+
