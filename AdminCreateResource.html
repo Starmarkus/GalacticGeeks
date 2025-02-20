@@ -4,16 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Create Resource</title>
-
-    
     <link rel="stylesheet" href="styles.css"> <!-- Link to external stylesheet -->
+    <style>
+        #resource-form-create{
+            color: white;
+            font-size: 20px;
+        }
 
+        .resourceForumCenteringDiv {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding-top: 10vh;
+        }
+
+        .resourceForumDivGeneral{
+            align-items: center;
+            justify-content: center;
+            width: 65%;
+            margin: 0 auto;
+        }
+    </style>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
   </head>
 <body>
-    <h1>Create a New Resource</h1>
-    <form id="resource-form">
+
+    <div class="resourceForumCenteringDiv">
+        <div class="resourceForumDivGeneral">
+    <h1 style="color: white; margin-bottom: 4vh;">Create a New Resource</h1>
+    <form id="resource-form-create">
         <label for="resource-name">Resource Name:</label>
         <input type="text" id="resource-name" required>
 
@@ -26,6 +46,10 @@
         <button type="submit">Add Resource</button>
 
     </form>
+</div>
+</div>
+
+
     <script>
         //Firebase configuration
         const firebaseConfig = {

@@ -8,19 +8,13 @@
 
     <style>
         /* Basic Styling */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        
         body {
-            background-color: #0C0910;
             display: flex;
             flex-direction: column;
             align-items: center;
             min-height: 100vh;
             padding: 20px;
-            color: white;
         }
 
         #root {
@@ -76,28 +70,33 @@
     </style>
 </head>
 <body>
-    <div class="TempNav">Temporary Navbar location</div>
-    <div class="container">
-        <div class="menuContainer">Temporary menu location</div>
-        <div class="adminResourceContainer">
-            <h2>Available Resources</h2>
-            <div id="root"></div>
-
-            <h2>Request a Resource</h2>
-            <form id="request-form">
-                <input type="text" id="resource-name" placeholder="Enter resource name" required>
-                <button type="submit">Request</button>
-            </form>
-
-            <div id="notification" class="notification"></div>
-
-            <!-- Firebase SDK -->
-            <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-            <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-        </div>
+    <div class ="TempNav">
+        Temporary Navbar location
     </div>
-    <div class="userFooter">Footer Location</div>
+    <div class ="container">
+        <div class ="menuContainer">
+            Temporary menu location
+        </div>
+        <div class ="adminResourceContainer">
+    <div id="root"></div>
+    <h2 style="color: white;">Request a Resource</h2>
 
+    <form id="request-form">
+        <input type="text" id="resource-name" placeholder="Enter resource name" required>
+        <button type="submit">Request</button>
+    </form>
+
+    <div id="notification" style="display: none; margin-top: 10px; color: green;"></div>
+
+    <!--  Firebase SDK (Compat Mode) -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+</div>
+</div>
+</div>
+<div class = "userFooter">
+    Footer Location
+</div>
     <script>
         // Firebase Configuration
         const firebaseConfig = {
