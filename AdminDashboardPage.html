@@ -3,30 +3,247 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Home</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Link to external stylesheet -->
+    <title>Admin Home & Resource Management</title>
+    <link rel="stylesheet" href="styles.css">
     <style>
-        
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            color: white; /* White font */
+            background-color: #1e1e1e; /* Dark background */
+            overflow-y: auto; /* Scrollable */
+        }
+        h1, h2 { margin-bottom: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        th, td { 
+            border: 1px solid #444; 
+            padding: 8px; 
+            text-align: left; 
+            color: white;
+        }
+        th { background-color: #333; }
+        .resource-details { font-style: italic; color: #aaa; }
+        .admin-controls { margin-bottom: 20px; }
+        .stats { margin-top: 20px; }
+        .stats div { margin-bottom: 10px; }
+        canvas { max-width: 100%; }
     </style>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-storage-compat.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    
-    <div class ="TempNav">
-        Temporary Navbar location
+
+    <div class="TempNav">
+        <h2>Temporary Navbar Location</h2>
     </div>
 
-<div class ="container">
-    <div class ="menuContainer">
-        Temporary menu location
-    </div>
-    <div class ="adminResourceContainer">
-        <p style = "color: white;">resource location </p>
-    </div>
-</div>
-<div class = "userFooter">
-    Footer Location
-</div>
+    <div class="container">
+        <div class="menuContainer">
+            <h2>Temporary Menu Location</h2>
+        </div>
 
+        <div class="adminResourceContainer">
+            <h1>Admin Resource Management</h1>
 
-</body>
-</html>
+            <div class="admin-controls">
+                <h2>Manage Resources</h2>
+                <input type="text" id="resourceName" placeholder="Resource Name">
+                <input type="text" id="resourceDetails" placeholder="Resource Details">
+                <input type="text" id="resourceId" placeholder="Resource ID">
+              <input type="file" id="fileUpload">
+                <button id="updateResourceBtn" onclick="updateResource()" style="display: none;">Update Resource</button>
+                <br><br>
+                <button id="addResourceBtn" onclick="addResource()">Add Resource</button>
+           <button onclick="removeFile()">Remove File</button>
+            </div>
+
+            <h2>Resource and Request Data</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Resource Name</th>
+                        <th>Resource Details</th>
+                        <th>Request ID</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="data-table-body"></tbody>
+            </table>
+
+            <div class="stats">
+                <h2>Statistics</h2>
+                <div>Total Resource Requests: <span id="totalRequests">0</span></div>
+                <div>Total Approvals: <span id="totalApprovals">0</span></div>
+                <div>Most Requested Resources: <span id="mostApprovals" >0</span></div>
+                <canvas id="requestChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="userFooter">
+        <h2>Footer Location</h2>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
+            authDomain: "system-galacticgeeks.firebaseapp.com",
+            databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "system-galacticgeeks",
+            storageBucket: "system-galacticgeeks.appspot.com",
+            messagingSenderId: "835850762785",
+            appId: "1:835850762785:web:d2e42efe2422dac089c160",
+            measurementId: "G-5S4L5M5GG5"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const storage = firebase.storage();
+        let chartInstance = null;
+
+        function addResource() {
+            const resourceId = document.getElementById('resourceId').value.trim();
+            const name = document.getElementById('resourceName').value.trim();
+            const details = document.getElementById('resourceDetails').value.trim();
+
+            if (!resourceId || !name || !details) {
+                alert("Please enter valid resource details and a Resource ID.");
+                return;
+            }
+
+            db.ref('resources/' + resourceId).set({ name, details, status: 'Pending' })
+                .then(() => {
+                    alert("Resource added successfully");
+                    resetForm();
+                    updateTable();
+                })
+                .catch(error => console.error("Error adding resource:", error));
+        }
+ // Edit Resource Function
+ function editResource(resourceId, name, details) {
+            document.getElementById('resourceId').value = resourceId;
+            document.getElementById('resourceName').value = name;
+            document.getElementById('resourceDetails').value = details;
+
+            document.getElementById('addResourceBtn').style.display = 'none';
+            document.getElementById('updateResourceBtn').style.display = 'inline-block';
+        }
+        function updateResource() {
+            const resourceId = document.getElementById('resourceId').value.trim();
+            const name = document.getElementById('resourceName').value.trim();
+            const details = document.getElementById('resourceDetails').value.trim();
+
+            if (!resourceId || !name || !details) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            db.ref('resources/' + resourceId).update({ name, details })
+                .then(() => {
+                    alert("Resource updated successfully");
+                    resetForm();
+                    updateTable();
+                })
+                .catch(error => console.error("Error updating resource:", error));
+        }
+         // Reset Form
+         function resetForm() {
+            document.getElementById('resourceId').value = '';
+            document.getElementById('resourceName').value = '';
+            document.getElementById('resourceDetails').value = '';
+            document.getElementById('addResourceBtn').style.display = 'inline-block';
+            document.getElementById('updateResourceBtn').style.display = 'none';
+        }
+
+        function updateTable() {
+            db.ref('resources').on('value', (resourcesSnap) => {
+                const tbody = document.getElementById('data-table-body');
+                tbody.innerHTML = '';
+
+                const resources = resourcesSnap.val() || {};
+                let resourceCounts = {};
+                let totalRequests = 0, totalApprovals = 0;
+
+                for (const resourceId in resources) {
+                    const resource = resources[resourceId];
+                    totalRequests++;
+                    if (resource.status === 'Approved') totalApprovals++;
+
+                    resourceCounts[resource.name] = (resourceCounts[resource.name] || 0) + 1;
+
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${resource.name}</td>
+                        <td class="resource-details">${resource.details}</td>
+                        <td>${resourceId}</td>
+                        <td>${resource.status || 'Pending'}</td>
+                        <td>
+                            <button onclick="approveRequest('${resourceId}')">Approve</button>
+                            <button onclick="rejectRequest('${resourceId}')">Reject</button>
+                               <button onclick="editResource('${resourceId}', '${resource.name}', '${resource.details}')">Edit</button>
+                            <button onclick="deleteResource('${resourceId}')">Delete</button>
+                        </td>`;
+                    tbody.appendChild(row);
+                }
+
+                document.getElementById('totalRequests').textContent = totalRequests;
+                document.getElementById('totalApprovals').textContent = totalApprovals;
+                renderChart(resourceCounts);
+          });
+        }
+        function renderChart(data) {
+            const ctx = document.getElementById('requestChart').getContext('2d');
+            if (chartInstance) chartInstance.destroy(); 
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(data),
+                    datasets: [{
+                        label: 'Requests',
+                        data: Object.values(data),
+                        backgroundColor: 'rgba(54, 162, 235, 0.6)'
+                    }]
+                },
+                options: {
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        function approveRequest(resourceId) {
+            db.ref('resources/' + resourceId).update({ status: 'Approved' }).then(updateTable);
+        }
+
+        function rejectRequest(resourceId) {
+            db.ref('resources/' + resourceId).update({ status: 'Rejected' }).then(updateTable);
+        }
+
+        function deleteResource(resourceId) {
+            if (confirm("Are you sure you want to delete this resource?")) {
+                db.ref('resources/' + resourceId).remove().then(updateTable);
+            }
+        }
+
+        function uploadFile() {
+            const file = document.getElementById('fileUpload').files[0];
+            if (file) {
+                const fileRef = storage.ref('uploads/' + file.name);
+                fileRef.put(file).then(() => alert("File uploaded successfully"));
+            } else {
+                alert("No file selected.");
+            }
+        }
+
+        function removeFile() {
+            document.getElementById('fileUpload').value = "";
+            alert("File removed.");
+        }
+
+        window.onload = updateTable;
+    </script>
+   </body>
+ </html>

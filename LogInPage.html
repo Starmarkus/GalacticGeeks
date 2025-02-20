@@ -66,10 +66,12 @@ import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 
 // Initialize Firebase
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-
+const storage = firebase.storage();
+        let chartInstance = null;
 // Show notification
 function showNotification(message, isError = true) {
     const notification = document.getElementById('notification');
