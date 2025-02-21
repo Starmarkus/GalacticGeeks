@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>User Dashboard</title>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
     <link rel="stylesheet" href="styles.css">
 
     <style>
@@ -158,7 +161,7 @@
         .save-btn {
             background-color: #2ecc71;
             color: white;
-            display: none; /* Initially hidden */
+            display: none;
         }
 
         .button:hover {
@@ -170,15 +173,9 @@
 
     <div class="centerUserCardDiv">
         <div class="rounded-rectangle">
-            <div class="icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" fill="currentColor" class="bi bi-person-circle" viewBox="0 0 16 16">
-                    <path d="M11 6a3 3 0 1 1-6 0 3 3 0 0 1 6 0"/>
-                    <path fill-rule="evenodd" d="M0 8a8 8 0 1 1 16 0A8 8 0 0 1 0 8m8-7a7 7 0 0 0-5.468 11.37C3.242 11.226 4.805 10 8 10s4.757 1.225 5.468 2.37A7 7 0 0 0 8 1"/>
-                </svg>
-            </div>
-
+            <div class="icon">👤</div>
             <div class="text-container">
-                <div class="username">Username</div>
+                <div class="username" id="usernameDisplay">Loading...</div>
                 <div class="welcome-message">Welcome to User Profile</div>
             </div>
 
@@ -189,61 +186,102 @@
     <div class="user-detail-container">
         <div class="detail-row">
             <div class="detail-label">First Name:</div>
-            <div class="detail-box"><input type="text" id="firstName" value="John" disabled></div>
+            <div class="detail-box"><input type="text" id="firstName" disabled></div>
         </div>
 
         <div class="detail-row">
             <div class="detail-label">Last Name:</div>
-            <div class="detail-box"><input type="text" id="lastName" value="Doe" disabled></div>
+            <div class="detail-box"><input type="text" id="lastName" disabled></div>
         </div>
 
         <div class="detail-row">
             <div class="detail-label">Email:</div>
-            <div class="detail-box"><input type="text" id="email" value="john.doe@example.com" disabled></div>
+            <div class="detail-box"><input type="text" id="email" disabled></div>
         </div>
 
         <div class="detail-row">
             <div class="detail-label">Location:</div>
-            <div class="detail-box"><input type="text" id="location" value="New York, USA" disabled></div>
+            <div class="detail-box"><input type="text" id="location" disabled></div>
         </div>
 
-        <div class="detail-row">
-            <div class="detail-label">Phone:</div>
-            <div class="phone-input">
-                <div class="phone-box">+123</div>
-                <div class="phone-number"><input type="text" id="phone" value="4567890" disabled></div>
-            </div>
-        </div>
+        
     </div>
 
     <div class="button-container">
-        <button class="button back-btn">Back</button>
+        <button class="button back-btn" onclick="goBack()">Back</button>
         <button class="button edit-btn" onclick="enableEditing()">Edit</button>
         <button class="button clear-btn" onclick="clearFields()">Clear</button>
         <button class="button save-btn" onclick="saveChanges()">Save</button>
     </div>
 
     <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
+            authDomain: "system-galacticgeeks.firebaseapp.com",
+            databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
+            projectId: "system-galacticgeeks",
+            storageBucket: "system-galacticgeeks.firebasestorage.app",
+            messagingSenderId: "835850762785",
+            appId: "1:835850762785:web:d2e42efe2422dac089c160",
+            measurementId: "G-5S4L5M5GG5"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        let currentUser = null;
+
+        // Load user data from Firebase
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                currentUser = user;
+                db.collection("users").doc(user.uid).get().then(doc => {
+                    if (doc.exists) {
+                        const data = doc.data();
+                        document.getElementById("usernameDisplay").textContent = data.firstName + " " + data.lastName;
+                        document.getElementById("firstName").value = data.firstName || "";
+                        document.getElementById("lastName").value = data.lastName || "";
+                        document.getElementById("email").value = data.email || "";
+                        document.getElementById("location").value = data.location || "";
+                        document.getElementById("phone").value = data.phone || "";
+                    }
+                }).catch(error => {
+                    console.error("Error fetching user data:", error);
+                });
+            } else {
+                window.location.href = "login.html"; // Redirect to login page if not authenticated
+            }
+        });
+
+        function goBack() {
+            window.location.href = "UserDashboardPage.html"; // Redirect to UserDashboardPage.html
+        }
+
         function enableEditing() {
             document.querySelectorAll('.detail-box input').forEach(input => input.removeAttribute('disabled'));
             document.querySelector('.edit-btn').style.display = 'none';
-            document.querySelector('.clear-btn').style.display = 'inline-block'; // Show Clear button
-            document.querySelector('.save-btn').style.display = 'inline-block';  // Show Save button
+            document.querySelector('.save-btn').style.display = 'inline-block';
         }
 
         function saveChanges() {
-            document.querySelectorAll('.detail-box input').forEach(input => input.setAttribute('disabled', 'true'));
-            document.querySelector('.edit-btn').style.display = 'inline-block';
-            document.querySelector('.clear-btn').style.display = 'none';  // Hide Clear button
-            document.querySelector('.save-btn').style.display = 'none';   // Hide Save button
-        }
+            const updatedData = {
+                firstName: document.getElementById("firstName").value,
+                lastName: document.getElementById("lastName").value,
+                location: document.getElementById("location").value,
+                phone: document.getElementById("phone").value
+            };
 
-        function clearFields() {
-            document.getElementById("firstName").value = "";
-            document.getElementById("lastName").value = "";
-            document.getElementById("email").value = "";
-            document.getElementById("location").value = "";
-            document.getElementById("phone").value = "";
+            db.collection("users").doc(currentUser.uid).update(updatedData)
+                .then(() => {
+                    alert("Profile updated successfully!");
+                    document.querySelectorAll('.detail-box input').forEach(input => input.setAttribute('disabled', 'true'));
+                    document.querySelector('.edit-btn').style.display = 'inline-block';
+                    document.querySelector('.save-btn').style.display = 'none';
+                })
+                .catch(error => console.error("Error updating profile:", error));
         }
     </script>
 
