@@ -227,7 +227,6 @@ function closeModal() {
     modal.style.display = "none"; // Hide modal
 }
 
-// Populate the resource list inside the modal
 function populateResourceList() {
     const resourceList = document.getElementById('resourceList');
     resourceList.innerHTML = ''; // Clear existing list
@@ -237,17 +236,17 @@ function populateResourceList() {
             const resource = childSnapshot.val();
             const resourceId = childSnapshot.key;
 
-            // Create a radio button for each resource
-            const label = document.createElement('label');
-            label.innerHTML = `
-                <input type="radio" name="resourceChoice" value="${resourceId}">
-                ${resource.name}
-            `;
-            resourceList.appendChild(label);
-            resourceList.appendChild(document.createElement('br'));
+            // Create a button for each resource
+            const opinionButton = document.createElement('button');
+            opinionButton.textContent = resource.name;
+            opinionButton.onclick = () => submitOpinion(resourceId, resource.name);
+            resourceList.appendChild(opinionButton);
         });
     });
 }
+
+
+
 
 // Confirm file upload and associate with the selected resource
 function confirmUpload() {
