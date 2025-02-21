@@ -213,16 +213,119 @@
             }
         }
 
-        function openModal() {
-            const modal = document.getElementById("resourceModal");
-            modal.style.display = "block"; // Show modal
-            populateResourceList(); // Populate resources in the modal
-        }
+        //new code
+// Open the modal and populate resource list
+function openModal() {
+    const modal = document.getElementById("resourceModal");
+    modal.style.display = "block"; // Show modal
+    populateResourceList(); // Populate resources in the modal
+}
 
-        function closeModal() {
-            const modal = document.getElementById("resourceModal");
-            modal.style.display = "none"; // Hide modal
-        }
+// Close the modal
+function closeModal() {
+    const modal = document.getElementById("resourceModal");
+    modal.style.display = "none"; // Hide modal
+}
+
+// Populate the resource list inside the modal
+function populateResourceList() {
+    const resourceList = document.getElementById('resourceList');
+    resourceList.innerHTML = ''; // Clear existing list
+
+    db.ref('resources').once('value', (snapshot) => {
+        snapshot.forEach(childSnapshot => {
+            const resource = childSnapshot.val();
+            const resourceId = childSnapshot.key;
+
+            // Create a radio button for each resource
+            const label = document.createElement('label');
+            label.innerHTML = `
+                <input type="radio" name="resourceChoice" value="${resourceId}">
+                ${resource.name}
+            `;
+            resourceList.appendChild(label);
+            resourceList.appendChild(document.createElement('br'));
+        });
+    });
+}
+
+// Confirm file upload and associate with the selected resource
+function confirmUpload() {
+    const resourceChoice = document.querySelector('input[name="resourceChoice"]:checked');
+    if (!resourceChoice) {
+        alert("Please select a resource to upload the file.");
+        return;
+    }
+
+    currentResourceId = resourceChoice.value; // Get the selected resource ID
+    uploadFile(); // Call the upload function
+    closeModal(); // Close the modal after confirming upload
+}
+
+// Handle file selection
+document.getElementById('fileUpload').addEventListener('change', function(event) {
+    selectedFile = event.target.files[0];
+    document.getElementById('uploadBtn').style.display = selectedFile ? 'block' : 'none';
+});
+
+// Upload the selected file to Firebase Storage
+function uploadFile() {
+    if (!currentResourceId || !selectedFile) {
+        alert("Please select a resource and a file to upload.");
+        return;
+    }
+
+    const fileRef = storage.ref('uploads/' + selectedFile.name); // Create a reference with the file's name
+
+    // Upload the file to Firebase Storage
+    fileRef.put(selectedFile).then(snapshot => {
+        return snapshot.ref.getDownloadURL(); // Get the download URL after upload
+    }).then(url => {
+        // Update the resource data with the uploaded file URL
+        return db.ref('resources/' + currentResourceId).update({ fileUrl: url });
+    }).then(() => {
+        alert("File uploaded successfully");
+        updateTable();
+        document.getElementById('uploadBtn').style.display = 'none'; // Hide the upload button again
+        document.getElementById('fileUpload').value = ''; // Clear the file input
+        selectedFile = null; // Reset the selectedFile variable
+        currentResourceId = null; // Reset the current resource ID
+    }).catch(error => {
+        console.error("File upload error:", error);
+        alert("Error uploading file. Please check the console for details.");
+    });
+}
+
+// Update the table with resource data
+function updateTable() {
+    db.ref('resources').on('value', (snapshot) => {
+        const tbody = document.getElementById('data-table-body');
+        tbody.innerHTML = '';
+
+        snapshot.forEach(childSnapshot => {
+            const resource = childSnapshot.val();
+            const resourceId = childSnapshot.key;
+
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${resource.name}</td>
+                <td class="resource-details">${resource.details}</td>
+                <td>${resourceId}</td>
+                <td>${resource.status}</td>
+                <td>
+                    <button onclick="approveRequest('${resourceId}')">Approve</button>
+                    <button onclick="rejectRequest('${resourceId}')">Reject</button>
+                    <button onclick="editResource('${resourceId}', '${resource.name}', '${resource.details}')">Edit</button>
+                    <button onclick="deleteResource('${resourceId}')">Delete</button>
+                </td>
+                <td>${resource.fileUrl ? `<a href="${resource.fileUrl}" target="_blank">View File</a>` : 'No File'}</td>
+            `;
+            tbody.appendChild(row);
+        });
+    });
+}
+
+
 
         function populateResourceList() {
             const resourceList = document.getElementById('resourceList');
