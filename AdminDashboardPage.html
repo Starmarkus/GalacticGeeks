@@ -202,16 +202,18 @@
         }
 
         function handleFileSelect() {
-            const fileInput = document.getElementById('fileUpload');
-            selectedFile = fileInput.files[0]; // Get the selected file
+    const fileInput = document.getElementById('fileUpload');
+    selectedFile = fileInput.files[0]; // Get the selected file
 
-            if (selectedFile) {
-                // Show the upload button when a file is selected
-                document.getElementById('uploadBtn').style.display = 'block';
-            } else {
-                document.getElementById('uploadBtn').style.display = 'none'; // Hide if no file is selected
-            }
-        }
+    if (selectedFile) {
+        // Show the upload button and open the modal for resource selection
+        document.getElementById('uploadBtn').style.display = 'block';
+        openModal(); // Open modal to select a resource
+    } else {
+        document.getElementById('uploadBtn').style.display = 'none'; // Hide if no file is selected
+        closeModal(); // Close modal if no file selected
+    }
+}
 
         //new code
 // Open the modal and populate resource list
