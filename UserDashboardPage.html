@@ -149,8 +149,7 @@
                 }
             });
         }
-
-        // Handle Resource Requests Form Submission
+// Handle Resource Requests Form Submission
         document.getElementById('request-form').addEventListener('submit', function(event) {
             event.preventDefault();
             const resourceName = document.getElementById('resource-name').value.trim();
@@ -158,7 +157,6 @@
                 alert("Please enter a resource name.");
                 return;
             }
-
             db.ref('requests').push({ name: resourceName, status: 'pending' })
                 .then(() => {
                     showNotification(`Request for "${resourceName}" submitted!`);
@@ -166,14 +164,12 @@
                 })
                 .catch(error => console.error("Error submitting request:", error));
         });
-
-        // Listen for Updates in Resource Requests (Real-Time)
+// Listen for Updates in Resource Requests (Real-Time)
         db.ref('requests').on('child_changed', snapshot => {
             const updatedRequest = snapshot.val();
             showNotification(`Your request for "${updatedRequest.name}" has been ${updatedRequest.status}`);
         });
-
-        // Function to Show Notifications
+// Function to Show Notifications
         function showNotification(message) {
             const notification = document.getElementById('notification');
             notification.textContent = message;
@@ -182,8 +178,7 @@
                 notification.style.display = 'none';
             }, 5000);
         }
-
-        // Load resources when the page loads
+// Load resources when the page loads
         loadResources();
     </script>
 </body>
