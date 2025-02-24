@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sign Up</title>
-    <link rel="stylesheet" href="styles.css"> <!-- Link to external stylesheet -->
+    <link rel="stylesheet" href="styles.css">
     <style>
         .notification {
             position: fixed;
@@ -15,12 +15,12 @@
             color: white;
             padding: 10px 20px;
             border-radius: 5px;
-            display: none; /* Hidden by default */
+            display: none;
             z-index: 1000;
         }
 
         .notification.error {
-            background-color: #f44336; /* Red for errors */
+            background-color: #f44336;
         }
     </style>
 </head>
@@ -44,95 +44,112 @@
 
 <div id="notification" class="notification"></div>
 
-<script src="https://www.gstatic.com/firebasejs/9.19.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.19.0/firebase-auth.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.19.0/firebase-firestore.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/9.19.0/firebase-app.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/9.19.0/firebase-auth.js"></script>
+<script type="module" src="https://www.gstatic.com/firebasejs/9.19.0/firebase-database.js"></script>
 
-<script>
-// Firebase Configuration
-const firebaseConfig = {
-    apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
-    authDomain: "system-galacticgeeks.firebaseapp.com",
-    databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
-    projectId: "system-galacticgeeks",
-    storageBucket: "system-galacticgeeks.appspot.com",
-    messagingSenderId: "835850762785",
-    appId: "1:835850762785:web:d2e42efe2422dac089c160",
-    measurementId: "G-5S4L5M5GG5"
-};
+<script type="module">
+    // Import Firebase modules as needed
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.19.0/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.19.0/firebase-auth.js";
+    import { getDatabase, ref, set } from "https://www.gstatic.com/firebasejs/9.19.0/firebase-database.js";
 
-// Initialize Firebase using the modular SDK
-import { initializeApp } from "firebase/app";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { getFirestore, doc, setDoc } from "firebase/firestore";
+    // Firebase configuration
+    const firebaseConfig = {
+        apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
+        authDomain: "system-galacticgeeks.firebaseapp.com",
+        databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
+        projectId: "system-galacticgeeks",
+        storageBucket: "system-galacticgeeks.appspot.com",
+        messagingSenderId: "835850762785",
+        appId: "1:835850762785:web:d2e42efe2422dac089c160",
+        measurementId: "G-5S4L5M5GG5"
+    };
 
-// Initialize Firebase
-firebase.initializeApp(firebaseConfig);
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-const storage = firebase.storage();
-        let chartInstance = null;
-// Show notification
-function showNotification(message, isError = true) {
-    const notification = document.getElementById('notification');
-    notification.textContent = message;
-    notification.classList.remove('error');
-    if (isError) {
-        notification.classList.add('error');
-    }
-    notification.style.display = 'block';
-     // Hide after 5 seconds
-    setTimeout(() => {
-        notification.style.display = 'none';
-    }, 5000);
-}
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const database = getDatabase(app);
 
-// Sign-up function
-async function signUpUser(firstName, lastName, email, password) {
-    try {
-        // Create user in Firebase Authentication
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // Store additional user data in Firestore
-        await setDoc(doc(db, "users", user.uid), {
-            firstName: firstName,
-            lastName: lastName,
-            email: email,
-            uid: user.uid
-        });
-
-        console.log("User registered successfully:", user);
-
-        // Show success notification
-        showNotification("Sign-up successful! Redirecting...", true);
-
-        // Redirect to login page or dashboard after successful sign-up
+    // Show notification function
+    function showNotification(message, isError = false) {
+        const notification = document.getElementById('notification');
+        notification.textContent = message;
+        notification.classList.remove('error');
+        if (isError) {
+            notification.classList.add('error');
+        }
+        notification.style.display = 'block';
         setTimeout(() => {
-            window.location.href = "LogInPage.html";  // Redirect to login page or another page as needed
-        }, 2000);  // Delay the redirect to allow users to see the success message
-
-    } catch (error) {
-        console.error("Sign-up error:", error.message);
-
-        // Show error notification
-        showNotification("Error: " + error.message, true);
+            notification.style.display = 'none';
+        }, 5000);
     }
-}
 
-// Handle sign-up form submission
-document.getElementById('signupForm').addEventListener('submit', function(event) {
-    event.preventDefault();
+    // Hashing the password using the Web Crypto API
+    async function hashPassword(password) {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(password);
+        const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+        const hashArray = Array.from(new Uint8Array(hashBuffer));
+        const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
+        return hashHex;
+    }
 
-    const firstName = document.getElementById('firstName').value;
-    const lastName = document.getElementById('lastName').value;
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
+    // Sign-up function
+    async function signUpUser(firstName, lastName, email, password) {
+        try {
+            // Hash the password
+            const hashedPassword = await hashPassword(password);
 
-    // Call the signUpUser function to create a new user
-    signUpUser(firstName, lastName, email, password);
-});
+            // Create user with email and hashed password using Firebase Authentication
+            const userCredential = await createUserWithEmailAndPassword(auth, email, hashedPassword);
+            const user = userCredential.user;
+
+            // Save user data to Firebase Realtime Database (including the hashed password)
+            const userRef = ref(database, 'users/' + user.uid);
+            await set(userRef, {
+                firstName: firstName,
+                lastName: lastName,
+                email: email,
+                password: hashedPassword, // Store the hashed password in the database
+                uid: user.uid
+            });
+
+            console.log("User registered successfully:", user);
+            showNotification("Sign-up successful! Redirecting...", true);
+
+            // Redirect to login page after successful sign-up
+            setTimeout(() => {
+                window.location.href = "LogInPage.html";
+            }, 2000);
+        } catch (error) {
+            console.error("Sign-up error:", error.message);
+
+            // Handling different types of errors
+            if (error.code === 'auth/email-already-in-use') {
+                showNotification("Error: This email is already in use. Please try another one.", true);
+            } else if (error.code === 'auth/invalid-email') {
+                showNotification("Error: The email format is invalid. Please check and try again.", true);
+            } else if (error.code === 'auth/weak-password') {
+                showNotification("Error: The password is too weak. Please use a stronger password.", true);
+            } else {
+                showNotification("Error: " + error.message, true);
+            }
+        }
+    }
+
+  
+    // Handle sign-up form submission
+    document.getElementById('signupForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+
+        const firstName = document.getElementById('firstName').value;
+        const lastName = document.getElementById('lastName').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+
+        signUpUser(firstName, lastName, email, password);
+    });
 </script>
 
 </body>
