@@ -4,15 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin - Manage Users</title>
-    <!---<link rel="stylesheet" href="styles.css"> --> <!-- Link to external stylesheet -->
-    <style>
-    </style>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-</head>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+   </head>
 <body>
     <h1>Admin - Add User</h1>
-    <form id="add-user-form">
+
+    <button id="login-btn">Admin Login</button>
+    <button id="logout-btn" style="display:none;">Logout</button>
+
+    <form id="add-user-form" style="display:none;">
         <label for="username">Username:</label>
         <input type="text" id="username" required>
         
@@ -31,56 +33,92 @@
                 <th>Action</th>
             </tr>
         </thead>
-        <tbody id="users-table-body">
-            <!-- Users will be loaded here dynamically -->
-        </tbody>
+        <tbody id="users-table-body"></tbody>
     </table>
 
     <script>
         // Firebase configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCXGnKdWdVmi2Z98DCZSYKV_nHx9zH7xRg",
-            authDomain: "system-galacticgeeks.firebaseapp.com",
-            databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
-            projectId: "system-galacticgeeks",
-            storageBucket: "system-galacticgeeks.firebasestorage.app",
-            messagingSenderId: "835850762785",
-            appId: "1:835850762785:web:d2e42efe2422dac089c160",
-            measurementId: "G-5S4L5M5GG5"
+  authDomain: "system-galacticgeeks.firebaseapp.com",
+  databaseURL: "https://system-galacticgeeks-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "system-galacticgeeks",
+  storageBucket: "system-galacticgeeks.firebasestorage.app",
+  messagingSenderId: "835850762785",
+  appId: "1:835850762785:web:d2e42efe2422dac089c160",
+  measurementId: "G-5S4L5M5GG5"
         };
 
         // Initialize Firebase
         const app = firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
+        const auth = firebase.auth();
 
-        document.getElementById('add-user-form').addEventListener('submit', function(event) {
-            event.preventDefault();
-            
-            const username = document.getElementById('username').value;
-            const email = document.getElementById('email').value;
-            
-            const newUserRef = db.ref('users').push();
-            newUserRef.set({
-                username: username,
-                email: email
-            })
-            .then(() => {
-                alert('User added successfully!');
-                document.getElementById('add-user-form').reset();
-            })
-            .catch(error => {
-                console.error('Error adding user:', error);
-                alert('Failed to add user. Check console for details.');
+        let adminToken = null;
+
+        // Admin login using Google
+        document.getElementById('login-btn').addEventListener('click', () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            auth.signInWithPopup(provider)
+                .then(async (result) => {
+                    const user = result.user;
+                    adminToken = await user.getIdToken();
+                    checkAdmin(user);
+                })
+                .catch(error => console.error('Login Error:', error));
+        });
+
+        // Logout
+        document.getElementById('logout-btn').addEventListener('click', () => {
+            auth.signOut().then(() => {
+                adminToken = null;
+                alert('Logged out successfully!');
+                location.reload();
             });
         });
 
+        // Check if user is an admin
+        function checkAdmin(user) {
+            db.ref(`admins/${user.uid}`).once('value').then(snapshot => {
+                if (snapshot.exists()) {
+                    document.getElementById('add-user-form').style.display = 'block';
+                    document.getElementById('login-btn').style.display = 'none';
+                    document.getElementById('logout-btn').style.display = 'block';
+                } else {
+                    alert('Access Denied: You are not an admin.');
+                    auth.signOut();
+                }
+            });
+        }
+
+        // Add new user (only admins can do this)
+        document.getElementById('add-user-form').addEventListener('submit', function(event) {
+            event.preventDefault();
+            if (!adminToken) {
+                alert('Unauthorized: You must be an admin.');
+                return;
+            }
+
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+
+            const newUserRef = db.ref('users').push();
+            newUserRef.set({ username, email })
+                .then(() => {
+                    alert('User added successfully!');
+                    document.getElementById('add-user-form').reset();
+                })
+                .catch(error => console.error('Error adding user:', error));
+        });
+
+        // Load users dynamically
         function loadUsers() {
             const usersRef = db.ref('users');
             usersRef.on('value', snapshot => {
                 const users = snapshot.val() || {};
                 const tbody = document.getElementById('users-table-body');
                 tbody.innerHTML = '';
-                
+
                 for (const userId in users) {
                     if (users.hasOwnProperty(userId)) {
                         const user = users[userId];
@@ -98,13 +136,28 @@
             });
         }
 
+        // Delete user (only admins can do this)
         function deleteUser(userId) {
+            if (!adminToken) {
+                alert('Unauthorized: You must be an admin.');
+                return;
+            }
+
             db.ref(`users/${userId}`).remove()
-            .then(() => alert('User deleted successfully!'))
-            .catch(error => console.error('Error deleting user:', error));
+                .then(() => alert('User deleted successfully!'))
+                .catch(error => console.error('Error deleting user:', error));
         }
 
-        loadUsers();
+        // Check login state on page load
+        auth.onAuthStateChanged(user => {
+            if (user) {
+                user.getIdToken().then(token => {
+                    adminToken = token;
+                    checkAdmin(user);
+                });
+            }
+            loadUsers();
+        });
     </script>
 </body>
 </html>
