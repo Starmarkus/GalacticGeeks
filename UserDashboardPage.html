@@ -158,9 +158,9 @@
                 alert("Please enter a resource name.");
                 return;
             }
-            db.ref('requests').push({ name: resourceName, status: 'pending' })
+            db.ref('requests').push({ name: resource.name, status: 'pending' })
                 .then(() => {
-                    showNotification(`Request for "${resourceName}" submitted!`);
+                    showNotification(`Request for "${resource.name}" submitted!`);
                     document.getElementById('request-form').reset();
                 })
                 .catch(error => console.error("Error submitting request:", error));
