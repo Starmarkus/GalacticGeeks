@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <style>
         body { 
+            background-color: #1e1e1e;
             overflow-y: auto;
         }
         h1, h2 { 
@@ -95,6 +96,7 @@
     <div class="container">
         <div class="adminResourceContainer">
             <h1>Admin Resource Management</h1>
+            
             <div class="admin-controls">
                 <h2>Manage Resources</h2>
                 <input type="text" id="resourceName" placeholder="Resource Name">
@@ -124,17 +126,17 @@
                 <tbody id="data-table-body"></tbody>
             </table>
 
-            <div class="stats">
-                <h2>Statistics</h2>
-                <div>Total Resource Requests: <span id="totalRequests">0</span></div>
-                <div>Total Approvals: <span id="totalApprovals">0</span></div>
-                <div>Most Requested Resources:</div>
+            <div class="stats" >
+                <h2 >Statistics</h2>
+                <h3 style="color: white;">Total Resource Requests: <span id="totalRequests">0</span></h3>
+                <h3 style="color: white;">Total Approvals: <span id="totalApprovals">0</span></h3>
+                <h3 style="color: white;">Most Requested Resources:</h3>
                 <canvas id="requestChart"></canvas>
             </div>
         </div>
     </div>
 
-    <div class="userFooter" >
+    <div class="userFooter">
     </div>
 
     <!-- Modal for Selecting Resource -->
@@ -312,19 +314,13 @@ function updateTable() {
         const tbody = document.getElementById('data-table-body');
         tbody.innerHTML = '';
 
-        let totalRequests = 0;
-        let totalApprovals = 0; 
-        const requestCountData = {};
-
         snapshot.forEach(childSnapshot => {
             const resource = childSnapshot.val();
             const resourceId = childSnapshot.key;
 
             const row = document.createElement('tr');
-            const fileLink = resource.fileUrl && resource.fileUrl.trim() !== "" ? `<a href="${resource.fileUrl}" target="_blank">View File</a>` : 'No File';
-
-            row.innerHTML = 
-                `<td>${resource.name}</td>
+            row.innerHTML = `
+                <td>${resource.name}</td>
                 <td class="resource-details">${resource.details}</td>
                 <td>${resourceId}</td>
                 <td>${resource.status}</td>
@@ -334,26 +330,14 @@ function updateTable() {
                     <button onclick="editResource('${resourceId}', '${resource.name}', '${resource.details}')">Edit</button>
                     <button onclick="deleteResource('${resourceId}')">Delete</button>
                 </td>
-                <td>${fileLink}</td>`;
-                tbody.appendChild(row);
-            totalRequests++; 
-            if (resource.status === 'Approved') {
-                totalApprovals++; 
-            }
-            requestCountData[resource.name] = (requestCountData[resource.name] || 0) + 1;
+                <td>${resource.fileUrl ? `<a href="${resource.fileUrl}" target="_blank">View File</a>` : 'No File'}</td>
+            `;
+            tbody.appendChild(row);
         });
-
-        document.getElementById('totalRequests').textContent = totalRequests;
-        document.getElementById('totalApprovals').textContent = totalApprovals;
-        drawChart(requestCountData);
     });
 }
 
 
-function isValidUrl(string) {
-    const res = string.match(/(https?:\/\/[^\s]+)/g);
-    return (res !== null);
-}
 
         function populateResourceList() {
             const resourceList = document.getElementById('resourceList');
