@@ -375,7 +375,7 @@ function updateTable() {
         function uploadFile() {
             if (!currentResourceId || !selectedFile) {
                 alert("Please select a resource and a file to upload.");
-                return;
+                 return ;
             }
 
             const fileRef = storage.ref('uploads/' + selectedFile.name); // Create a reference with the file's name
@@ -398,6 +398,32 @@ function updateTable() {
                 alert("Error uploading file. Please check the console for details.");
             });
         }
+
+        function getDownloadURL(fileName) {
+    if (!fileName) {
+        console.error("No file name provided.");
+        return Promise.reject("No file name provided.");
+    }
+
+    const fileRef = storage.ref('uploads/' + fileName);
+
+    return fileRef.getDownloadURL()
+        .then(url => {
+            console.log("File Download URL:", url);
+            return url;
+        })
+        .catch(error => {
+            console.error("Error fetching download URL:", error);
+            return Promise.reject(error);
+        });
+}
+
+getDownloadURL("example.pdf")
+    .then(url => {
+        console.log("Download URL:", url);
+        window.open(url, "_blank"); // Open the file in a new tab
+    })
+    .catch(error => console.error("Error:", error));
 
         function filterResources() {
             const searchQuery = document.getElementById('searchBar').value.toLowerCase();
