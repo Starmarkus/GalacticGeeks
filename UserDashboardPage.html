@@ -89,13 +89,27 @@
             </form>
 
             <div id="notification" style="display: none; margin-top: 10px; color: green;"></div>
+            
+            <!-- User Request History Section -->
+            <h2>Your Requests</h2>
+            <table id="user-requests-table">
+                <thead>
+                    <tr>
+                        <th>Resource Requested</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="user-request-table-body">
+                    <!-- User requests will be populated here -->
+                </tbody>
+            </table>
 
-            <!--  Firebase SDK (Compat Mode) -->
+            <!-- Firebase SDK (Compat Mode) -->
             <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
             <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
         </div>
     </div>
-    <div class = "userFooter">
+    <div class="userFooter">
         Footer Location
     </div>
 
@@ -129,9 +143,12 @@
 
         // Function to Request a Resource
         function requestResource(name) {
-            db.ref('requests').push({ name, status: 'pending' })
+            const userId = getUserID(); // Assume this function retrieves the current user's ID
+
+            db.ref('requests').push({ userId, name, status: 'pending' })
                 .then(() => {
                     showNotification(`Request for "${name}" submitted!`);
+                    loadUserRequests(); // Refresh the user requests after submitting
                 })
                 .catch(error => console.error("Error requesting resource:", error));
         }
@@ -150,26 +167,38 @@
             });
         }
 
+        // Load User Requests
+        function loadUserRequests() {
+            const userId = getUserID(); // Function to get the current user's ID
+            db.ref('requests').orderByChild('userId').equalTo(userId).on('value', (snapshot) => {
+                const tbody = document.getElementById('user-request-table-body');
+                tbody.innerHTML = ''; // Clear existing requests
+
+                snapshot.forEach(childSnapshot => {
+                    const request = childSnapshot.val();
+
+                    const row = document.createElement('tr');
+                    row.innerHTML =
+                        `<td>${request.name}</td>
+                        <td>${request.status}</td>`;
+                    tbody.appendChild(row);
+                });
+            });
+        }
+
         // Handle Resource Requests Form Submission
         document.getElementById('request-form').addEventListener('submit', function(event) {
             event.preventDefault();
-            const resourceName = document.getElementById('resourceName').value.trim(); // Get the input value by the new ID
-            if (!resourceName) {
-                alert("Please enter a resource name.");
-                return;
-            }
-            db.ref('requests').push({ name: resource.name, status: 'pending' })
-                .then(() => {
-                    showNotification(`Request for "${resource.name}" submitted!`);
-                    document.getElementById('request-form').reset();
-                })
-                .catch(error => console.error("Error submitting request:", error));
+            const resourceName = document.getElementById('resourceName').value.trim();
+            requestResource(resourceName);
+            document.getElementById('request-form').reset();
         });
 
         // Listen for Updates in Resource Requests (Real-Time)
         db.ref('requests').on('child_changed', snapshot => {
             const updatedRequest = snapshot.val();
             showNotification(`Your request for "${updatedRequest.name}" has been ${updatedRequest.status}`);
+            loadUserRequests(); // Refresh user requests upon any change
         });
 
         // Function to Show Notifications
@@ -178,13 +207,13 @@
             notification.textContent = message;
             Object.assign(notification.style, {
                 position: 'fixed',
-                top: '10px', // Positioned at the top
+                top: '10px', 
                 left: '50%',
-                transform: 'translateX(-50%)', // Center it horizontally
-                background: '#007BFF', // Blue color
+                transform: 'translateX(-50%)', 
+                background: '#007BFF', 
                 color: '#fff',
-                padding: '20px 40px', // Larger padding for a big pop-up
-                fontSize: '20px', // Bigger text
+                padding: '20px 40px', 
+                fontSize: '20px', 
                 fontWeight: 'bold',
                 borderRadius: '8px',
                 boxShadow: '0 4px 10px rgba(0, 0, 0, 0.2)',
@@ -201,8 +230,17 @@
             }, 5000);
         }
 
-        // Load resources when the page loads
-        loadResources();
+        // Load resources and user requests when the page loads
+        window.onload = function() {
+            loadResources();
+            loadUserRequests();
+        };
+
+        // Function to get the current user's ID from your authentication mechanism.
+        function getUserID() {
+            // Dummy function, replace with your authentication logic
+            return "exampleUserID"; // Example user ID, replace with actual logic
+        }
     </script>
 </body>
 </html>
