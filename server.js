@@ -40,7 +40,8 @@ async function sendResetPasswordEmail(userEmail) {
     port: 587,  // Port 587 for TLS
     auth: {
       user: 'jesse.viljoen@capaciti.org.za',  // Your TurboSMTP username
-      pass: '*********',  // Your TurboSMTP password (replace with actual password)
+      pass: 's9EIr5g6',  // Your TurboSMTP password (replace with actual password)
+
     },
   });
 
