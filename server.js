@@ -83,3 +83,8 @@ app.post('/upload', upload.single('pdfFile'), (req, res) => {
     if (!req.file) return res.status(400).send('No file uploaded.');
     res.send(`PDF uploaded: ${req.file.filename}`);
 });
+
+// Start the server
+app.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
+});
